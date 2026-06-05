@@ -1,46 +1,111 @@
 
-# FVM Version Cache
+# ============================================================
+# FVM
+# ============================================================
 .fvm/
 
-# Flutter/Dart
+# ============================================================
+# Flutter / Dart
+# ============================================================
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
 build/
+
+# 自動生成コード
 *.g.dart
 *.freezed.dart
+*.mocks.dart
 
+# ============================================================
 # iOS
+# ============================================================
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
 ios/Runner.xcworkspace/xcshareddata/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcodeproj/project.xcworkspace/
 *.ipa
+*.dSYM.zip
+*.dSYM
 
+# ============================================================
 # Android
+# ============================================================
 android/.gradle/
 android/local.properties
-android/app/google-services.json
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/gradle/
 *.apk
 *.aab
+*.ap_
 
-# Environment / Secrets
+# ============================================================
+# 機密情報 / 認証情報 / 環境変数
+# ============================================================
+# 環境変数ファイル
 .env
 .env.*
-*.pem
-*.key
+!.env.example
+
+# Firebase / Google
 google-services.json
 GoogleService-Info.plist
+firebase_app_id_file.json
+firebase_options.dart
 
+# 証明書・鍵
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+*.jks
+*.keystore
+keystore.properties
+key.properties
+
+# API キー・トークン
+**/secrets.dart
+**/secret.dart
+**/api_keys.dart
+secrets.json
+credentials.json
+
+# ============================================================
 # macOS
+# ============================================================
 .DS_Store
+**/.DS_Store
+*.swp
 
-# IDE
+# ============================================================
+# IDE / エディタ
+# ============================================================
 .idea/
 *.iml
 .vscode/
+*.suo
+*.user
 
+# ============================================================
+# ログ / キャッシュ
+# ============================================================
+*.log
+.pub-cache/
+coverage/
+*.lcov
+
+# ============================================================
 # Claude Code（ローカル設定）
+# ============================================================
 .claude/settings.local.json
