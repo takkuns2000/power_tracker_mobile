@@ -41,9 +41,6 @@ ios/Runner.xcodeproj/project.xcworkspace/
 android/.gradle/
 android/local.properties
 android/captures/
-android/gradlew
-android/gradlew.bat
-android/gradle/
 *.apk
 *.aab
 *.ap_
