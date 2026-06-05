@@ -1,17 +1,59 @@
-# horsepower_tracker_mobile
+# HorsepowerTracker
 
-A new Flutter project.
+スマートフォンで自車両の馬力を計測・記録・分析するモバイルアプリです。
 
-## Getting Started
+## 概要
 
-This project is a starting point for a Flutter application.
+GPSセンサーを活用して走行データを取得し、車両の馬力をその場で計測できます。計測結果はすべて端末内に保存され、外部サーバへの送信は一切行いません。
 
-A few resources to get you started if this is your first Flutter project:
+## 対応環境
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+| OS | バージョン |
+|----|-----------|
+| Android | 13以上（API レベル 33以上） |
+| iOS | 16.0以上 |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 主な機能
+
+- **馬力計測** — GPSデータをもとに走行中の馬力をリアルタイム計測
+- **記録閲覧** — 過去の計測結果を一覧・詳細表示
+- **車両登録** — 複数車両の管理・紐付け
+- **課金機能** — 追加機能のアンロック
+
+## 技術スタック
+
+| 項目 | 採用技術 |
+|------|---------|
+| フレームワーク | Flutter (fvm 3.44.1) |
+| アーキテクチャ | MVVM |
+| 状態管理 | Provider |
+| ローカルDB | SQLite |
+| 位置情報 | GPS（緯度・経度・標高） |
+
+## セットアップ
+
+### 前提条件
+
+- [fvm](https://fvm.app/) がインストール済みであること
+- Flutter 3.44.1（fvm により自動切替）
+
+### 手順
+
+```bash
+# リポジトリのクローン
+git clone https://github.com/takenaka/horsepower_tracker_mobile.git
+cd horsepower_tracker_mobile
+
+# Flutter バージョンのセットアップ
+fvm install
+
+# 依存パッケージのインストール
+fvm flutter pub get
+
+# アプリの起動
+fvm flutter run
+```
+
+## データの取り扱い
+
+計測データおよび車両情報はすべて端末内（SQLite）にローカル保存されます。外部サーバへの送信は行いません。
