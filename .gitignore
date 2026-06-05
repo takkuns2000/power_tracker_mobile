@@ -1,3 +1,46 @@
 
 # FVM Version Cache
 .fvm/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.g.dart
+*.freezed.dart
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Runner.xcworkspace/xcshareddata/
+*.ipa
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/google-services.json
+*.apk
+*.aab
+
+# Environment / Secrets
+.env
+.env.*
+*.pem
+*.key
+google-services.json
+GoogleService-Info.plist
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Claude Code（ローカル設定）
+.claude/settings.local.json
