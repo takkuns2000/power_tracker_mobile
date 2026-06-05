@@ -1,0 +1,24 @@
+# ビルド成果物
+build/
+.dart_tool/
+
+# iOS依存関係
+ios/Pods/
+ios/Flutter/Flutter.framework
+
+# Android依存関係
+android/.gradle/
+
+# 自動生成コード
+*.g.dart
+*.freezed.dart
+
+# 機密情報
+.env
+.env.*
+google-services.json
+GoogleService-Info.plist
+
+# ログ・キャッシュ
+*.log
+.pub-cache/

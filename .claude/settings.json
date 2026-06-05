@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(fvm flutter pub get)",
+      "Bash(fvm flutter pub add *)",
+      "Bash(fvm flutter run*)",
+      "Bash(fvm flutter build*)",
+      "Bash(fvm flutter test*)",
+      "Bash(fvm flutter analyze)",
+      "Bash(fvm flutter clean)",
+      "Bash(fvm flutter gen-l10n)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(ls *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ]
+  }
+}
