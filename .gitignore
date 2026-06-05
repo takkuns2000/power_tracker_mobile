@@ -90,9 +90,17 @@ credentials.json
 # ============================================================
 .idea/
 *.iml
-.vscode/
+.vscode/*.log
 *.suo
 *.user
+
+# Xcode ユーザーローカル設定
+ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/
+ios/Runner.xcworkspace/xcshareddata/
+
+# 対象外プラットフォーム
+web/
+windows/
 
 # ============================================================
 # ログ / キャッシュ
