@@ -54,8 +54,15 @@ lib/
 
 | コマンド | 用途 | 使用タイミング |
 |---------|------|-------------|
-| `/self-review` | マージ前のセルフレビュー実施 | PR作成前 |
+| `/self-review` | アーキテクチャ規約・バグのセルフレビュー | PR作成前 |
+| `/security-review` | セキュリティ脆弱性のレビュー | PR作成前 |
 | `/commit-commands:commit` | コミットの作成 | 実装完了時 |
 | `/commit-commands:commit-push-pr` | コミット・プッシュ・PR作成を一括実行 | レビュー依頼時 |
 | `/commit-commands:clean_gone` | リモートで削除済みのローカルブランチを一括削除 | ブランチが増えてきたとき |
 | `/feature-dev:feature-dev` | コードベースを理解した上でのガイド付き機能実装 | 新機能の実装開始時 |
+
+### 推奨フロー
+
+```
+実装完了 → /self-review → /security-review → /commit-commands:commit-push-pr
+```
