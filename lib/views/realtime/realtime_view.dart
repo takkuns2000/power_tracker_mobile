@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
+import '../../viewmodels/gps_viewmodel.dart';
 import '../../viewmodels/realtime_viewmodel.dart';
 import '../widgets/glass_card.dart';
 
@@ -12,6 +13,7 @@ class RealtimeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<RealtimeViewModel>();
+    final gps = context.watch<GpsViewModel>();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -30,6 +32,11 @@ class RealtimeView extends StatelessWidget {
                     speedKmh: vm.speedKmh,
                   ),
                   const SizedBox(height: 16),
+                  if (gps.permissionStatus != GpsPermissionStatus.granted &&
+                      gps.permissionStatus != GpsPermissionStatus.unknown) ...[
+                    _GpsPermissionBanner(gps: gps),
+                    const SizedBox(height: 16),
+                  ],
                   _GpsGrid(
                     latitude: vm.latitude,
                     longitude: vm.longitude,
@@ -318,6 +325,53 @@ class _HudInfoBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GpsPermissionBanner extends StatelessWidget {
+  const _GpsPermissionBanner({required this.gps});
+  final GpsViewModel gps;
+
+  @override
+  Widget build(BuildContext context) {
+    final (IconData icon, String message, VoidCallback? onTap) =
+        switch (gps.permissionStatus) {
+      GpsPermissionStatus.denied => (
+          Icons.location_off_outlined,
+          '位置情報の利用が拒否されました。タップして再度許可してください。',
+          gps.retryPermission,
+        ),
+      GpsPermissionStatus.permanentlyDenied => (
+          Icons.settings_outlined,
+          '位置情報の利用が永続的に拒否されています。設定アプリから許可してください。',
+          gps.openSettings,
+        ),
+      _ => (
+          Icons.gps_off_outlined,
+          '位置情報サービスが無効です。端末の設定から有効にしてください。',
+          null,
+        ),
+    };
+
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        leftBorderColor: AppColors.error,
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.error, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: AppTextStyles.bodyMd(context).copyWith(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

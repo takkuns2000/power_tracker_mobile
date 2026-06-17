@@ -6,9 +6,12 @@ import 'viewmodels/realtime_viewmodel.dart';
 import 'viewmodels/measurement_viewmodel.dart';
 import 'viewmodels/records_viewmodel.dart';
 import 'viewmodels/garage_viewmodel.dart';
+import 'services/gps_service.dart';
+import 'viewmodels/gps_viewmodel.dart';
 import 'views/main_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const HorsepowerTrackerApp());
 }
 
@@ -20,6 +23,10 @@ class HorsepowerTrackerApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => NavigationViewModel()),
+        ChangeNotifierProvider(create: (_) => GpsService()..initialize()),
+        ChangeNotifierProvider(
+          create: (ctx) => GpsViewModel(ctx.read<GpsService>()),
+        ),
         ChangeNotifierProvider(create: (_) => RealtimeViewModel()),
         ChangeNotifierProvider(create: (_) => MeasurementViewModel()),
         ChangeNotifierProvider(create: (_) => RecordsViewModel()),
