@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GPS情報（緯度・経度・標高・速度）のリアルタイム表示に使用します。</string>
 </dict>
 </plist>
