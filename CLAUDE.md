@@ -3,7 +3,7 @@
 **IMPORTANT: 会話を開始する前に必ず [README.md](README.md) を読むこと。** MCPサーバーの設定・利用方法などの重要な開発環境情報が記載されている。
 
 See [README.md](README.md) for project overview.
-Specs: [docs/requirements_specification.md](docs/requirements_specification.md), [docs/basic_specification.md](docs/basic_specification.md)
+Specs: [docs/requirements_specification.md](docs/requirements_specification.md), [docs/basic_specification.md](docs/basic_specification.md), [docs/data_specification.md](docs/data_specification.md)
 
 ## Commands
 
