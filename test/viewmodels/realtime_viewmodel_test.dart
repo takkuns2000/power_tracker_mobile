@@ -83,7 +83,14 @@ void main() {
       expect(result, 0.0);
     });
 
-    test('加速時は正の馬力を返す', () {
+    test('加速時の PS が仕様式と一致する', () {
+      // 手計算（仕様書の式から独立して算出）:
+      //   ke2 = 1500 × 25² / (2 × 0.85) = 937500 / 1.7 = 551470.588 J
+      //   ke1 = 1500 × 10² / 2           = 75000 J
+      //   PE  = 0（Δh=0）
+      //   PS  = (551470.588 - 75000) / 1s / 735.49875 = 647.82 PS
+      const expected = 647.82;
+
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 
@@ -99,7 +106,7 @@ void main() {
           currentTime: t1,
           vehicleMassKg: 1500);
 
-      expect(ps, greaterThan(0.0));
+      expect(ps, closeTo(expected, 0.01));
     });
 
     test('減速時は 0.0 を返す', () {
@@ -121,7 +128,17 @@ void main() {
       expect(ps, 0.0);
     });
 
-    test('登坂（速度一定・標高増加）は正の馬力を返す', () {
+    test('登坂（等速）の PS が仕様式と一致する（PE の η 適用を検証）', () {
+      // 手計算（仕様書の式から独立して算出）:
+      //   ke2 = 1500 × 20² / (2 × 0.85) = 600000 / 1.7 = 352941.176 J
+      //   ke1 = 1500 × 20² / 2           = 300000 J
+      //   PE  = 1500 × 9.80665 × 5 / 0.85 = 73549.875 / 0.85 = 86529.265 J
+      //   PS  = (52941.176 + 86529.265) / 1s / 735.49875 = 189.63 PS
+      //
+      //   ※ PE に η を付け忘れた場合:
+      //   PE  = 1500 × 9.80665 × 5 = 73549.875 J → PS ≈ 171.91 PS（テストが落ちる）
+      const expected = 189.63;
+
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 
@@ -137,7 +154,7 @@ void main() {
           currentTime: t1,
           vehicleMassKg: 1500);
 
-      expect(ps, greaterThan(0.0));
+      expect(ps, closeTo(expected, 0.01));
     });
 
     test('reset 後は初回扱いになる（0.0 を返す）', () {
@@ -217,6 +234,13 @@ void main() {
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 
+      vm.selectVehicle(Vehicle(
+          id: 1,
+          name: 'A',
+          weightKg: 1500,
+          createdAt: DateTime(2024),
+          updatedAt: DateTime(2024)));
+
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
 
@@ -226,6 +250,13 @@ void main() {
     test('減速時は horsepower == 0', () {
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
+
+      vm.selectVehicle(Vehicle(
+          id: 1,
+          name: 'A',
+          weightKg: 1500,
+          createdAt: DateTime(2024),
+          updatedAt: DateTime(2024)));
 
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t0));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t1));

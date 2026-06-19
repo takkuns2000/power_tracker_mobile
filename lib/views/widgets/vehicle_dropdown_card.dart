@@ -36,31 +36,31 @@ class VehicleDropdownCard extends StatelessWidget {
             right: 0,
             child: Icon(
               Icons.directions_car,
-              size: 60,
+              size: 40,
               color: AppColors.onSurface.withValues(alpha: 0.05),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.selectVehicle,
                   style: AppTextStyles.labelCaps(context)
-                      .copyWith(color: AppColors.primary),
+                      .copyWith(color: AppColors.primary, fontSize: 10),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 DropdownButtonFormField<Vehicle>(
                   key: ValueKey(selectedId),
                   initialValue: selectedVehicle,
                   hint: Text(
                     l10n.selectVehicleHint,
-                    style: AppTextStyles.statsMd(context),
+                    style: AppTextStyles.statsMd(context).copyWith(fontSize: 15),
                   ),
                   decoration: InputDecoration(
                     contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: AppColors.primary.withValues(alpha: 0.3),
@@ -73,7 +73,7 @@ class VehicleDropdownCard extends StatelessWidget {
                     filled: false,
                   ),
                   dropdownColor: AppColors.surfaceContainer,
-                  style: AppTextStyles.statsMd(context),
+                  style: AppTextStyles.statsMd(context).copyWith(fontSize: 15),
                   items: vehicles
                       .map(
                         (v) => DropdownMenuItem<Vehicle>(

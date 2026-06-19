@@ -21,25 +21,105 @@ Spec: [basic_specification.md](../basic_specification.md) § 2-1, 2-2, 2-3, 3
 ## 関連サービス
 
 - lib/services/gps_service.dart — GPS計測
-- lib/services/horsepower_calculator.dart — 馬力算出ロジック
+- lib/services/ps_calculator.dart — PS 算出ロジック（`PsCalculatorService`）
 
 ## 馬力計算ロジック
 
-`lib/sample/dart_package_1_base.dart` に確定済みの計算コードがある。**このファイルは変更禁止**。`lib/services/horsepower_calculator.dart` を実装する際はこのコードを参考に同じロジックで構築すること。
+`lib/sample/dart_package_1_base.dart` に元となる計算コードがある。**このファイルは変更禁止**。
+実装ファイル（`lib/services/ps_calculator.dart`）は以下の点で sample コードを改善している：
+- 仕事量をすべて J（ジュール）に統一（sample は kgf·m と J が混在）
+- 位置エネルギーにも η を適用してエンジン側へ換算（sample は η なし）
+- 重力加速度を 9.8 → 9.80665 に精度向上
 
-| 関数 | 内容 |
-|------|------|
-| `calculateWork` | GPS データ列から総仕事量を算出（位置エネルギー補正あり） |
-| `calculateHorsepower` | 仕事量・時間から馬力（PS）を算出。換算係数は 75（仏馬力） |
-| `calculatePotentialEnergy` | 標高差から位置エネルギーを算出 |
-| `calculateWorkBetweenGps` | 隣接する2点間の仕事量を算出（リアルタイム計測用） |
+### 単位系
 
-主要な計算式：
+すべての仕事量を **J（ジュール）** で統一し、最後に目的の出力単位へ変換する。
+
+| 量 | 単位 | 備考 |
+|---|---|---|
+| 速度入力 | m/s | GPS から直接取得 |
+| 質量 | kg | |
+| 標高 | m | |
+| 仕事量（全て） | J | 中間計算はすべて J に統一 |
+| 出力（瞬時） | W | J / s |
+| 表示単位 | PS | 仏馬力（metric horsepower） |
+
+### 定数
+
+| 定数 | 値 | 説明 |
+|---|---|---|
+| `driveEfficiency` (η) | 0.85 | 駆動効率（ドライブトレイン損失） |
+| `g` | 9.80665 | 重力加速度 [m/s²] |
+| `wattsPerPs` | 75 × 9.80665 ≈ 735.5 | 1 PS をワットで表した値 |
+
+### 計算ステップ（隣接する 2 GPS 点間）
 
 ```
-engineWork = m × v2² / (2 × 9.8 × driveEfficiency) − m × v1² / (2 × 9.8)
-HP = engineWork / deltaTime / 75
-RPM = speed(km/h) × 1000/60 / (π × tireDiameter) × finalGearRatio × gearRatio
+v1, v2 : 前後の速度 [m/s]
+Δt     : 経過時間 [s]
+Δh     : 標高差 [m]（後 − 前）
+m      : 車両重量 [kg]
+η      : 駆動効率 (0.85)
+g      : 9.80665 [m/s²]
+
+# 1. 運動エネルギー差 [J]
+ke2 = m × v2² / (2η)    ← エンジンが今から v2 を実現するために出力すべきエネルギー（η で損失分を上乗せ）
+ke1 = m × v1² / 2       ← すでに車両に蓄えられているエネルギー。η なし（過去の計算で損失は支払い済み）
+engineWork = ke2 − ke1  [J]
+
+# ke1 に η を付けない理由：
+# ke1/η にすると engineWork = (ke2−ke1)/η = ΔKE/η となり、等速走行で 0 になる。
+# η なしで引くことで等速時も正の値（ドライブトレインの常時損失補填分）が得られる。
+# 等速時: ke2/η − ke1 = m×v²×(1−η)/(2η) > 0
+
+# 2. 位置エネルギー差 [J]（エンジン出力換算）
+potentialEnergy = m × g × Δh / η  [J]   ← KE の ke2 と同様、η でエンジン側に換算
+
+# 3. 合計仕事量 [J]
+totalWork = engineWork + potentialEnergy
+if totalWork ≤ 0: PS = 0  （減速・下り坂のみは出力しない）
+
+# 4. 瞬時出力 [PS]
+power [W] = totalWork / Δt
+PS = power / (75 × g)          // 1 PS = 75 kgf·m/s = 735.5 W
+```
+
+### ロス馬力（ドライブトレイン損失）
+
+GPS 計測はタイヤの動きから算出するため、取得できるのは**ホイール馬力**（車輪出力）のみ。
+
+`ke2 = m × v2² / (2η)` の `÷ η` により、ホイール馬力からエンジン出力（クランク馬力）を逆算できるが、η は車種・駆動方式・温度によって異なるため固定値での補正は精度向上にならない。
+
+| 表示方針 | η | メリット | デメリット |
+|---------|---|---------|-----------|
+| ホイール馬力（実測） | 1.0 | GPS から正確に算出できる値をそのまま表示 | エンジン出力より低い値になる（一般的な損失 15〜20%） |
+| エンジン馬力（推定） | 0.85 | 車のカタログ値に近い数値になる | 固定 η のため車種によって誤差が出る。現在の実装 |
+
+**現在の実装**: η = 0.85（エンジン馬力推定）
+変更する場合は `lib/services/ps_calculator.dart` の `_driveEfficiency` を修正する。
+
+### 実装ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `lib/services/ps_calculator.dart` | LIVE画面用・リアルタイム1点間計算（`PsCalculatorService`） |
+| `lib/sample/dart_package_1_base.dart` | 参照コード（変更禁止） |
+
+### 数値検証例
+
+| 条件 | 値 |
+|---|---|
+| v1 = 10 km/h → v2 = 17 km/h | Δv = +7 km/h |
+| Δt = 1 s、Δh = 0 m | 標高変化なし |
+| m = 1090 kg | sample デフォルト値 |
+| **結果** | **≈ 13.7 PS**（Δh = 0 のため potentialEnergy = 0、sample と同値） |
+
+### RPM 計算（Pro Mode 専用）
+
+LIVE 画面では表示しない。計測グラフ（Pro Mode）でのみ使用。
+
+```
+RPM = speed[km/h] × 1000/60 / (π × tireDiameter[m]) × finalGearRatio × gearRatio
 ```
 
 ## 実装メモ

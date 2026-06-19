@@ -19,6 +19,10 @@ class RealtimeView extends StatelessWidget {
     final gps = context.watch<GpsViewModel>();
     final garage = context.watch<GarageViewModel>();
 
+    if (vm.selectedVehicleId == null && garage.vehicles.isNotEmpty) {
+      context.read<RealtimeViewModel>().initDefaultVehicle(garage.vehicles.first);
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _RealtimeAppBar(),
@@ -27,17 +31,10 @@ class RealtimeView extends StatelessWidget {
         child: Container(
           color: AppColors.background,
           child: SafeArea(
-            child: SingleChildScrollView(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Column(
                 children: [
-                  VehicleDropdownCard(
-                    vehicles: garage.vehicles,
-                    selectedId: vm.selectedVehicleId,
-                    onChanged: (vehicle) =>
-                        context.read<RealtimeViewModel>().selectVehicle(vehicle),
-                  ),
-                  const SizedBox(height: 16),
                   _CentralGaugeCard(
                     ps: vm.ps,
                     speedKmh: vm.speedKmh,
@@ -57,6 +54,13 @@ class RealtimeView extends StatelessWidget {
                   _HudInfoBar(
                     isGpsActive: vm.isGpsActive,
                     gpsUpdateHz: vm.gpsUpdateHz,
+                  ),
+                  const SizedBox(height: 16),
+                  VehicleDropdownCard(
+                    vehicles: garage.vehicles,
+                    selectedId: vm.selectedVehicleId,
+                    onChanged: (vehicle) =>
+                        context.read<RealtimeViewModel>().selectVehicle(vehicle),
                   ),
                 ],
               ),
@@ -227,53 +231,56 @@ class _GpsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(12),
-            leftBorderColor: AppColors.primary,
-            child: _GpsItem(
-              label: l10n.latitude,
-              value: latitude != null
-                  ? '${latitude!.toStringAsFixed(4)}°N'
-                  : '-',
-              icon: Icons.location_on_outlined,
-              iconColor: AppColors.primary,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: GlassCard(
+              padding: const EdgeInsets.all(12),
+              leftBorderColor: AppColors.primary,
+              child: _GpsItem(
+                label: l10n.latitude,
+                value: latitude != null
+                    ? '${latitude!.toStringAsFixed(4)}°N'
+                    : '-',
+                icon: Icons.location_on_outlined,
+                iconColor: AppColors.primary,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(12),
-            leftBorderColor: AppColors.secondary,
-            child: _GpsItem(
-              label: l10n.longitude,
-              value: longitude != null
-                  ? '${longitude!.toStringAsFixed(4)}°E'
-                  : '-',
-              icon: Icons.explore_outlined,
-              iconColor: AppColors.secondary,
+          const SizedBox(width: 8),
+          Expanded(
+            child: GlassCard(
+              padding: const EdgeInsets.all(12),
+              leftBorderColor: AppColors.secondary,
+              child: _GpsItem(
+                label: l10n.longitude,
+                value: longitude != null
+                    ? '${longitude!.toStringAsFixed(4)}°E'
+                    : '-',
+                icon: Icons.explore_outlined,
+                iconColor: AppColors.secondary,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.all(12),
-            leftBorderColor: AppColors.tertiary,
-            child: _GpsItem(
-              label: l10n.altitude,
-              value: altitudeM != null
-                  ? '${altitudeM!.toStringAsFixed(0)} m'
-                  : '-',
-              icon: Icons.landscape_outlined,
-              iconColor: AppColors.tertiary,
+          const SizedBox(width: 8),
+          Expanded(
+            child: GlassCard(
+              padding: const EdgeInsets.all(12),
+              leftBorderColor: AppColors.tertiary,
+              child: _GpsItem(
+                label: l10n.altitude,
+                value: altitudeM != null
+                    ? '${altitudeM!.toStringAsFixed(0)} m'
+                    : '-',
+                icon: Icons.landscape_outlined,
+                iconColor: AppColors.tertiary,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -312,6 +319,8 @@ class _GpsItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.statsMd(context).copyWith(fontSize: 13),
         ),
       ],

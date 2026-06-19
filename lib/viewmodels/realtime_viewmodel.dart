@@ -89,6 +89,13 @@ class RealtimeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void initDefaultVehicle(Vehicle vehicle) {
+    if (_selectedVehicleId != null) return;
+    _selectedVehicleId = vehicle.id?.toString();
+    _selectedVehicleMass = vehicle.weightKg;
+    _calculator.reset();
+  }
+
   void _clearValues() {
     _ps = null;
     _speedKmh = null;
