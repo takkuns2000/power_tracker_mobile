@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -56,6 +57,7 @@ class _MeasuringAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -86,7 +88,7 @@ class _MeasuringAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '計測中',
+                  l10n.measuring,
                   style: GoogleFonts.sora(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -148,6 +150,7 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.primary,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -157,12 +160,12 @@ class _StatusCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ステータス',
+              Text(l10n.statusLabel,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(fontSize: 10)),
               const SizedBox(height: 4),
               Text(
-                'リアルタイム追跡中',
+                l10n.realtimeTracking,
                 style: GoogleFonts.sora(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -174,7 +177,7 @@ class _StatusCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('経過時間',
+              Text(l10n.elapsedTime,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(fontSize: 10)),
               const SizedBox(height: 4),
@@ -215,6 +218,7 @@ class _StatusCard extends StatelessWidget {
 class _HpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,10 +239,10 @@ class _HpCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('推定馬力',
+              Text(l10n.estimatedPower,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(color: AppColors.onSurfaceVariant)),
-              Text('ピーク: -- PS',
+              Text(l10n.peakPowerDefault,
                   style: AppTextStyles.statsMd(context)
                       .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
@@ -258,7 +262,7 @@ class _HpCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('PS',
+              Text(l10n.unitPs,
                   style: GoogleFonts.sora(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -278,6 +282,7 @@ class _HpCard extends StatelessWidget {
 class _TorqueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,10 +305,10 @@ class _TorqueCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('推定トルク',
+                  Text(l10n.estimatedTorque,
                       style: AppTextStyles.labelCaps(context)
                           .copyWith(color: AppColors.onSurfaceVariant)),
-                  Text('ピーク: -- kgm',
+                  Text(l10n.peakTorqueDefault,
                       style: AppTextStyles.statsMd(context)
                           .copyWith(color: AppColors.primary, fontSize: 14)),
                 ],
@@ -316,7 +321,7 @@ class _TorqueCard extends StatelessWidget {
                     const Icon(Icons.workspace_premium,
                         color: AppColors.primary, size: 14),
                     const SizedBox(width: 4),
-                    Text('PRO機能',
+                    Text(l10n.proFeature,
                         style: AppTextStyles.labelCaps(context)
                             .copyWith(color: AppColors.primary, fontSize: 10)),
                   ],
@@ -339,7 +344,7 @@ class _TorqueCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('kgm',
+              Text(l10n.unitKgm,
                   style: GoogleFonts.sora(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -410,6 +415,7 @@ class _StopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Positioned(
       bottom: 0,
       left: 0,
@@ -452,7 +458,7 @@ class _StopButton extends StatelessWidget {
                           color: Colors.white, size: 24),
                       const SizedBox(width: 8),
                       Text(
-                        '計測を停止',
+                        l10n.stopMeasurement,
                         style: GoogleFonts.sora(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -463,7 +469,7 @@ class _StopButton extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    '結果詳細を確認する',
+                    l10n.viewResults,
                     style: AppTextStyles.labelCaps(context)
                         .copyWith(color: Colors.white70, fontSize: 10),
                   ),

@@ -16,18 +16,33 @@ class GarageViewModel extends ChangeNotifier {
   bool get isPro => _purchaseService.isPro;
   List<Vehicle> _vehicles = [];
   bool _isLoading = false;
+  String? _loadError;
 
   List<Vehicle> get vehicles => List.unmodifiable(_vehicles);
   bool get isLoading => _isLoading;
+  String? get loadError => _loadError;
+
+  void clearLoadError() {
+    _loadError = null;
+    notifyListeners();
+  }
 
   Future<void> loadVehicles() async {
     debugPrint('[GarageViewModel] loadVehicles start');
     _isLoading = true;
+    _loadError = null;
     notifyListeners();
-    _vehicles = await _repository.getAll();
-    _isLoading = false;
-    notifyListeners();
-    debugPrint('[GarageViewModel] loadVehicles done: ${_vehicles.length} vehicles');
+    try {
+      _vehicles = await _repository.getAll();
+      debugPrint('[GarageViewModel] loadVehicles done: ${_vehicles.length} vehicles');
+    } catch (e) {
+      debugPrint('[GarageViewModel] loadVehicles error: $e');
+      _loadError = e.toString();
+      _vehicles = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> deleteVehicle(int id) async {

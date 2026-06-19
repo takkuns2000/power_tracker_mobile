@@ -162,6 +162,9 @@ class VehicleSettingsViewModel extends ChangeNotifier {
       }
       debugPrint('[VehicleSettingsViewModel] save done');
       return true;
+    } catch (e) {
+      debugPrint('[VehicleSettingsViewModel] save error: $e');
+      return false;
     } finally {
       _isSaving = false;
       notifyListeners();

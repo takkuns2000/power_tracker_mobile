@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -15,6 +16,7 @@ class VehicleSettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<VehicleSettingsViewModel>();
     final isPro = vm.isPro;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -55,14 +57,14 @@ class VehicleSettingsView extends StatelessWidget {
               context: context,
               builder: (_) => AlertDialog(
                 backgroundColor: AppColors.surface,
-                title: Text('入力エラー',
+                title: Text(l10n.inputError,
                     style: AppTextStyles.headlineLg(context)
                         .copyWith(color: AppColors.error)),
-                content: const Text('ニックネーム・重量・駆動方式は必須項目です。\n入力内容を確認してください。'),
+                content: Text(l10n.requiredFieldsError),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('閉じる'),
+                    child: Text(l10n.close),
                   ),
                 ],
               ),
@@ -81,6 +83,7 @@ class _VehicleSettingsAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -106,7 +109,7 @@ class _VehicleSettingsAppBar extends StatelessWidget
                     const Icon(Icons.settings_outlined,
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 12),
-                    Text('車両設定',
+                    Text(l10n.vehicleSettings,
                         style: GoogleFonts.sora(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -135,21 +138,22 @@ class _BasicInfoModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.primary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _UnderlineField(
-            label: '車両ニックネーム',
+            label: l10n.labelVehicleNickname,
             isRequired: true,
             placeholder: '',
             controller: vm.nameController,
           ),
           const SizedBox(height: 24),
           _UnderlineField(
-            label: '型式',
-            placeholder: '例：JZA80',
+            label: l10n.labelModelCode,
+            placeholder: l10n.placeholderModelCode,
             controller: vm.modelCodeController,
             keyboardType: TextInputType.visiblePassword,
             inputFormatters: [_UpperCaseAlphanumericFormatter()],
@@ -159,12 +163,12 @@ class _BasicInfoModule extends StatelessWidget {
             children: [
               Expanded(
                 child: _UnderlineField(
-                  label: '車両重量 (KG)',
+                  label: l10n.labelVehicleWeight,
                   isRequired: true,
                   placeholder: '1450',
                   controller: vm.weightController,
                   keyboardType: TextInputType.number,
-                  suffix: Text('KG',
+                  suffix: Text(l10n.unitKg,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),
                 ),
@@ -172,11 +176,11 @@ class _BasicInfoModule extends StatelessWidget {
               const SizedBox(width: 24),
               Expanded(
                 child: _UnderlineField(
-                  label: '排気量 (CC)',
+                  label: l10n.labelDisplacement,
                   placeholder: '1998',
                   controller: vm.displacementController,
                   keyboardType: TextInputType.number,
-                  suffix: Text('CC',
+                  suffix: Text(l10n.unitCc,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),
                 ),
@@ -185,7 +189,7 @@ class _BasicInfoModule extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _UnderlineField(
-            label: '車両メモ',
+            label: l10n.labelVehicleMemo,
             placeholder: '',
             controller: vm.memoController,
             maxLines: 2,
@@ -295,6 +299,7 @@ class _DrivetrainModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.secondary,
       child: Column(
@@ -304,9 +309,9 @@ class _DrivetrainModule extends StatelessWidget {
             text: TextSpan(
               style: AppTextStyles.labelCaps(context)
                   .copyWith(color: AppColors.onSurfaceVariant.withValues(alpha: 0.7)),
-              children: const [
-                TextSpan(text: '駆動方式設定'),
-                TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+              children: [
+                TextSpan(text: l10n.labelDrivetrain),
+                const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
               ],
             ),
           ),
@@ -441,6 +446,7 @@ class _ProLockWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isPro) return child;
     return Stack(
       children: [
@@ -461,13 +467,13 @@ class _ProLockWrapper extends StatelessWidget {
                 const Icon(Icons.lock_outline,
                     color: AppColors.tertiary, size: 24),
                 const SizedBox(height: 8),
-                Text('Pro Mode 限定',
+                Text(l10n.proModeLimited,
                     style: AppTextStyles.labelCaps(context).copyWith(
                       color: AppColors.tertiary,
                       fontSize: 11,
                     )),
                 const SizedBox(height: 4),
-                Text('アップグレードして解放',
+                Text(l10n.upgradeToUnlock,
                     style: AppTextStyles.labelCaps(context).copyWith(
                       color: AppColors.onSurfaceVariant,
                       fontSize: 10,
@@ -487,6 +493,7 @@ class _TireSizeModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.secondary,
       child: Column(
@@ -495,7 +502,7 @@ class _TireSizeModule extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Pro Mode：タイヤサイズ',
+              Text(l10n.proModeTireSize,
                   style: AppTextStyles.labelCaps(context).copyWith(
                       color:
                           AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
@@ -508,7 +515,7 @@ class _TireSizeModule extends StatelessWidget {
             children: [
               Expanded(
                 child: _UnderlineField(
-                  label: '幅 (MM)',
+                  label: l10n.labelTireWidth,
                   placeholder: '225',
                   controller: vm.tireWidthController,
                   keyboardType: TextInputType.number,
@@ -517,7 +524,7 @@ class _TireSizeModule extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: _UnderlineField(
-                  label: '扁平率 (%)',
+                  label: l10n.labelTireAspect,
                   placeholder: '45',
                   controller: vm.tireAspectController,
                   keyboardType: TextInputType.number,
@@ -526,7 +533,7 @@ class _TireSizeModule extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: _UnderlineField(
-                  label: 'リム径 (インチ)',
+                  label: l10n.labelTireRim,
                   placeholder: '17',
                   controller: vm.tireRimController,
                   keyboardType: TextInputType.number,
@@ -544,15 +551,17 @@ class _GearRatiosModule extends StatelessWidget {
   const _GearRatiosModule({required this.vm});
   final VehicleSettingsViewModel vm;
 
-  static const _gearLabels = [
-    '1速', '2速', '3速', '4速', '5速', '6速', '7速',
-  ];
   static const _gearPlaceholders = [
     '3.500', '2.000', '1.400', '1.100', '0.900', '0.750', '0.650',
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final gearLabels = [
+      l10n.labelGear1, l10n.labelGear2, l10n.labelGear3, l10n.labelGear4,
+      l10n.labelGear5, l10n.labelGear6, l10n.labelGear7,
+    ];
     return GlassCard(
       leftBorderColor: AppColors.tertiary,
       child: Column(
@@ -561,7 +570,7 @@ class _GearRatiosModule extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Pro Mode：ギア比設定',
+              Text(l10n.proModeGearRatio,
                   style: AppTextStyles.labelCaps(context).copyWith(
                       color:
                           AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
@@ -578,7 +587,7 @@ class _GearRatiosModule extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _GearInput(
-                        label: _gearLabels[row * 2],
+                        label: gearLabels[row * 2],
                         placeholder: _gearPlaceholders[row * 2],
                         controller: vm.gearControllers[row * 2],
                       ),
@@ -587,7 +596,7 @@ class _GearRatiosModule extends StatelessWidget {
                     Expanded(
                       child: row * 2 + 1 < 7
                           ? _GearInput(
-                              label: _gearLabels[row * 2 + 1],
+                              label: gearLabels[row * 2 + 1],
                               placeholder: _gearPlaceholders[row * 2 + 1],
                               controller: vm.gearControllers[row * 2 + 1],
                             )
@@ -600,7 +609,7 @@ class _GearRatiosModule extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _GearInput(
-            label: 'ファイナルギア比',
+            label: l10n.labelFinalGear,
             placeholder: '4.100',
             controller: vm.finalGearController,
             labelColor: AppColors.secondary,
@@ -682,6 +691,7 @@ class _SaveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       decoration: BoxDecoration(
@@ -723,7 +733,7 @@ class _SaveButton extends StatelessWidget {
                     color: Colors.white, size: 22),
               const SizedBox(width: 12),
               Text(
-                '車両を保存',
+                l10n.vehicleSave,
                 style: GoogleFonts.sora(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -738,4 +748,3 @@ class _SaveButton extends StatelessWidget {
     );
   }
 }
-

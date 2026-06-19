@@ -102,6 +102,28 @@ void main() {
     });
   });
 
+  group('loadVehicles() エラー処理', () {
+    test('getAll() が例外を投げると loadError が設定され isLoading が false になる', () async {
+      when(() => repo.getAll()).thenThrow(Exception('DB error'));
+      final vm = GarageViewModel(repo, purchaseService);
+      await Future.microtask(() {});
+
+      expect(vm.loadError, isNotNull);
+      expect(vm.isLoading, false);
+      expect(vm.vehicles, isEmpty);
+    });
+
+    test('clearLoadError() で loadError が null になる', () async {
+      when(() => repo.getAll()).thenThrow(Exception('DB error'));
+      final vm = GarageViewModel(repo, purchaseService);
+      await Future.microtask(() {});
+
+      vm.clearLoadError();
+
+      expect(vm.loadError, isNull);
+    });
+  });
+
   group('createSettingsViewModel()', () {
     test('VehicleSettingsViewModel を返す', () async {
       final vm = GarageViewModel(repo, purchaseService);

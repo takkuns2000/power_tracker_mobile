@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app_theme.dart';
 import '../widgets/glass_card.dart';
@@ -86,6 +87,7 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -112,7 +114,7 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 12),
                     Text(
-                      'HISTORY',
+                      l10n.navHistory,
                       style: GoogleFonts.sora(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -143,6 +145,7 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _SummarySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -150,7 +153,7 @@ class _SummarySection extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Lifetime Runs',
+            Text(l10n.lifetimeRuns,
                 style: AppTextStyles.labelCaps(context)
                     .copyWith(color: AppColors.secondary)),
             RichText(
@@ -165,7 +168,7 @@ class _SummarySection extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: 'Records',
+                    text: l10n.records,
                     style: AppTextStyles.bodyMd(context)
                         .copyWith(color: AppColors.primary),
                   ),
@@ -177,7 +180,7 @@ class _SummarySection extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('Peak Stats',
+            Text(l10n.peakStats,
                 style: AppTextStyles.labelCaps(context)
                     .copyWith(color: AppColors.secondary)),
             RichText(
@@ -192,7 +195,7 @@ class _SummarySection extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: 'MAX HP',
+                    text: l10n.maxHp,
                     style: AppTextStyles.bodyMd(context)
                         .copyWith(color: AppColors.primary),
                   ),
@@ -322,12 +325,13 @@ class _TrendIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (trend == 0) {
       return Row(
         children: [
           const Icon(Icons.horizontal_rule,
               color: AppColors.onSurfaceVariant, size: 16),
-          Text('-- HP',
+          Text(l10n.trendNeutral,
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 13,
                 color: AppColors.onSurfaceVariant,
@@ -387,6 +391,7 @@ class _MonthSeparator extends StatelessWidget {
 class _EcuSyncSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -403,7 +408,7 @@ class _EcuSyncSection extends StatelessWidget {
               color: AppColors.primary, size: 36),
           const SizedBox(height: 12),
           Text(
-            'Synchronize with ECU to import historical dyno data automatically.',
+            l10n.ecuSyncDescription,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMd(context)
                 .copyWith(color: AppColors.onSurfaceVariant),
