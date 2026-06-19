@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -13,6 +14,7 @@ class MeasurementPreparationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MeasurementViewModel>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -32,7 +34,7 @@ class MeasurementPreparationView extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _EnvInputCard(
-                      label: 'TEMPERATURE',
+                      label: l10n.labelTemperature,
                       unit: '°C',
                       onChanged: (v) => context
                           .read<MeasurementViewModel>()
@@ -42,7 +44,7 @@ class MeasurementPreparationView extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _EnvInputCard(
-                      label: 'PRESSURE',
+                      label: l10n.labelPressure,
                       unit: 'hPa',
                       onChanged: (v) => context
                           .read<MeasurementViewModel>()
@@ -78,6 +80,7 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -104,7 +107,7 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
                     Text(
-                      'TRACK',
+                      l10n.navTrack,
                       style: GoogleFonts.sora(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -125,13 +128,14 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              '計測準備',
+              l10n.measurementPrep,
               style: GoogleFonts.sora(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -151,7 +155,7 @@ class _SectionTitle extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '走行前の環境設定と車両確認を行ってください',
+          l10n.measurementPrepSubtitle,
           style: AppTextStyles.bodyMd(context)
               .copyWith(color: AppColors.onSurfaceVariant, fontSize: 13),
         ),
@@ -166,6 +170,7 @@ class _VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       child: Stack(
         children: [
@@ -181,13 +186,13 @@ class _VehicleCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('SELECT VEHICLE',
+              Text(l10n.selectVehicle,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(color: AppColors.primary)),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedVehicleId,
-                hint: Text('車両を選択',
+                hint: Text(l10n.selectVehicleHint,
                     style: AppTextStyles.statsMd(context)),
                 decoration: InputDecoration(
                   contentPadding:
@@ -282,6 +287,7 @@ class _EnvInputCard extends StatelessWidget {
 class _VehicleStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.primary,
       child: Column(
@@ -321,10 +327,10 @@ class _VehicleStatusCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('GPS PRECISION',
+                  Text(l10n.gpsPrecision,
                       style: AppTextStyles.labelCaps(context)
                           .copyWith(fontSize: 10)),
-                  Text('LOCK (10Hz)',
+                  Text(l10n.gpsLock10Hz,
                       style: AppTextStyles.labelCaps(context)
                           .copyWith(color: AppColors.primary, fontSize: 10)),
                 ],
@@ -346,6 +352,7 @@ class _StartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
@@ -370,7 +377,7 @@ class _StartButton extends StatelessWidget {
             const Icon(Icons.timer, color: Colors.white, size: 28),
             const SizedBox(width: 12),
             Text(
-              '計測開始',
+              l10n.startMeasurement,
               style: GoogleFonts.sora(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,

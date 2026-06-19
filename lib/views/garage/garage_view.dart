@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -46,17 +47,18 @@ class GarageView extends StatelessWidget {
     final vehicleCount = vm.vehicles.length;
     debugPrint('[Garage] isPro=$isPro, vehicleCount=$vehicleCount');
     if (!isPro && vehicleCount >= 1) {
+      final l10n = AppLocalizations.of(context)!;
       showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: Text('Pro Mode が必要です',
+          title: Text(l10n.proModeRequired,
               style: AppTextStyles.headlineLg(context)),
-          content: const Text('複数車両の登録には Pro Mode へのアップグレードが必要です。'),
+          content: Text(l10n.proModeRequiredMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('閉じる'),
+              child: Text(l10n.close),
             ),
           ],
         ),
@@ -69,6 +71,32 @@ class GarageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<GarageViewModel>();
+    final l10n = AppLocalizations.of(context)!;
+
+    if (vm.loadError != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.loadError,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(l10n.loadErrorMessage),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  vm.clearLoadError();
+                },
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        );
+      });
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -78,7 +106,7 @@ class GarageView extends StatelessWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
-        onPressed: () => _onAddTap(context),
+        onPressed: vm.isLoading ? null : () => _onAddTap(context),
         child: const Icon(Icons.add_circle_outlined, size: 28),
       ),
       body: SafeArea(
@@ -112,6 +140,7 @@ class _GarageAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -138,7 +167,7 @@ class _GarageAppBar extends StatelessWidget implements PreferredSizeWidget {
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 12),
                     Text(
-                      'VEHICLES',
+                      l10n.navVehicles,
                       style: GoogleFonts.sora(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -164,13 +193,14 @@ class _FleetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Fleet Overview',
+        Text(l10n.fleetOverview,
             style: AppTextStyles.labelCaps(context)
                 .copyWith(color: AppColors.primary, letterSpacing: 1.5)),
-        Text('ガレージ', style: AppTextStyles.headlineLg(context)),
+        Text(l10n.garage, style: AppTextStyles.headlineLg(context)),
       ],
     );
   }
@@ -183,6 +213,7 @@ class _VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: GestureDetector(
@@ -212,7 +243,7 @@ class _VehicleCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Weight',
+                        Text(l10n.vehicleCardWeight,
                             style: AppTextStyles.labelCaps(context)
                                 .copyWith(fontSize: 10)),
                         const SizedBox(height: 4),
@@ -240,7 +271,7 @@ class _VehicleCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Power',
+                        Text(l10n.vehicleCardPower,
                             style: AppTextStyles.labelCaps(context)
                                 .copyWith(fontSize: 10)),
                         const SizedBox(height: 4),

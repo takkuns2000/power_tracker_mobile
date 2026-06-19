@@ -5,6 +5,7 @@ Output a structured text report in Japanese with the following sections:
 ---
 
 ## セルフレビュー結果
+- 日本語で出力すること
 
 ### 1. バグ・ロジックエラー
 - null安全性の問題
@@ -18,7 +19,6 @@ Output a structured text report in Japanese with the following sections:
 - ViewModel を経由しないデータ操作
 
 ### 3. コーディング規約違反
-- UI テキストが日本語以外
 - 不要なコメント（WHY が自明なもの）
 - 未使用の import・変数
 
@@ -29,5 +29,6 @@ Output a structured text report in Japanese with the following sections:
 ### 5. 総合判定
 
 **[PASS / NEEDS CHANGES]**
+- Must,Shuld,Nitで優先度付けを行うこと
 
 NEEDS CHANGES の場合は修正が必要な箇所をファイルパスと行番号で列挙する。

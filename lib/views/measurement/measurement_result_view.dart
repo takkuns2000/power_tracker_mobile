@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -57,6 +58,7 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -82,7 +84,8 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
                     const Icon(Icons.analytics_outlined,
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
-                    Text('計測結果', style: AppTextStyles.headlineLg(context)),
+                    Text(l10n.measurementResult,
+                        style: AppTextStyles.headlineLg(context)),
                   ],
                 ),
                 const Icon(Icons.more_vert,
@@ -99,9 +102,10 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _DateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        Text('計測日時',
+        Text(l10n.measurementDateTime,
             style: AppTextStyles.labelCaps(context)
                 .copyWith(fontSize: 10, letterSpacing: 2)),
         const SizedBox(height: 4),
@@ -129,9 +133,10 @@ class _DateHeader extends StatelessWidget {
 class _PeakHpSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        Text('最高出力到達',
+        Text(l10n.peakPowerReached,
             style: AppTextStyles.labelCaps(context)
                 .copyWith(color: AppColors.primary.withValues(alpha: 0.7))),
         const SizedBox(height: 8),
@@ -159,7 +164,7 @@ class _PeakHpSection extends StatelessWidget {
                 ),
               ),
               TextSpan(
-                text: ' HP',
+                text: ' ${l10n.unitHp}',
                 style: GoogleFonts.sora(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
@@ -177,6 +182,7 @@ class _PeakHpSection extends StatelessWidget {
 class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +203,7 @@ class _ChartCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('馬力 (HP)',
+                      Text(l10n.chartPowerHp,
                           style: AppTextStyles.labelCaps(context)),
                     ],
                   ),
@@ -213,7 +219,7 @@ class _ChartCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('RPM x1000',
+                      Text(l10n.chartRpmX1000,
                           style: AppTextStyles.labelCaps(context)),
                     ],
                   ),
@@ -231,11 +237,11 @@ class _ChartCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Text('PRO',
+                    Text(l10n.pro,
                         style: AppTextStyles.labelCaps(context)
                             .copyWith(color: AppColors.primary, fontSize: 10)),
                     const SizedBox(width: 8),
-                    Text('回転数軸',
+                    Text(l10n.chartRpmAxis,
                         style: AppTextStyles.labelCaps(context).copyWith(
                             color: AppColors.onSurfaceVariant, fontSize: 10)),
                   ],
@@ -252,7 +258,7 @@ class _ChartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text('時間経過 (s)',
+          Text(l10n.chartTimeElapsed,
               style: AppTextStyles.labelCaps(context)
                   .copyWith(fontSize: 10)),
         ],
@@ -322,11 +328,12 @@ class _HpChartPainter extends CustomPainter {
 class _EnvInputRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Expanded(child: _EnvInput(label: '気温 (任意)', unit: '°C')),
+        Expanded(child: _EnvInput(label: l10n.envInputTemp, unit: '°C')),
         const SizedBox(width: 16),
-        Expanded(child: _EnvInput(label: '大気圧 (任意)', unit: 'hPa')),
+        Expanded(child: _EnvInput(label: l10n.envInputPressure, unit: 'hPa')),
       ],
     );
   }
@@ -383,6 +390,7 @@ class _EnvInput extends StatelessWidget {
 class _StatsBento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -392,12 +400,15 @@ class _StatsBento extends StatelessWidget {
       childAspectRatio: 1.5,
       children: [
         _StatCell(
-            label: '0-100 KM/H',
+            label: l10n.stat0To100,
             value: '3.42',
-            unit: '秒',
+            unit: l10n.unitSeconds,
             valueColor: AppColors.primary),
-        _StatCell(label: '湿度', value: '42', unit: '%'),
-        _ProStatCell(label: '最大トルク', value: '720', unit: 'NM',
+        _StatCell(label: l10n.statHumidity, value: '42', unit: '%'),
+        _ProStatCell(
+            label: l10n.statMaxTorque,
+            value: '720',
+            unit: 'NM',
             valueColor: AppColors.secondary),
         _ProLogCell(),
       ],
@@ -466,6 +477,7 @@ class _ProStatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
@@ -507,7 +519,7 @@ class _ProStatCell extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               color: AppColors.primary,
-              child: Text('PRO',
+              child: Text(l10n.pro,
                   style: const TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
@@ -524,6 +536,7 @@ class _ProStatCell extends StatelessWidget {
 class _ProLogCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
@@ -536,7 +549,7 @@ class _ProLogCell extends StatelessWidget {
                 const Icon(Icons.analytics_outlined,
                     color: AppColors.primary, size: 28),
                 const SizedBox(height: 4),
-                Text('詳細ログを表示',
+                Text(l10n.showDetailLog,
                     style: AppTextStyles.labelCaps(context)
                         .copyWith(color: AppColors.primary, fontSize: 10)),
               ],
@@ -549,7 +562,7 @@ class _ProLogCell extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               color: AppColors.primary,
-              child: Text('PRO',
+              child: Text(l10n.pro,
                   style: const TextStyle(
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
@@ -566,6 +579,7 @@ class _ProLogCell extends StatelessWidget {
 class _VehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -578,7 +592,7 @@ class _VehicleCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('計測車両',
+                    Text(l10n.measuredVehicle,
                         style: AppTextStyles.labelCaps(context)
                             .copyWith(color: AppColors.primary)),
                     const SizedBox(height: 4),
@@ -604,11 +618,12 @@ class _VehicleCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _VehicleDetail(
-                          label: '排気量', value: '3,996 cc'),
+                          label: l10n.vehicleDetailDisplacement,
+                          value: '3,996 cc'),
                     ),
                     Expanded(
                       child: _VehicleDetail(
-                          label: '駆動方式', value: 'RR'),
+                          label: l10n.vehicleDetailDrivetrain, value: 'RR'),
                     ),
                   ],
                 ),
@@ -617,7 +632,7 @@ class _VehicleCard extends StatelessWidget {
                   maxLines: 2,
                   style: AppTextStyles.bodyMd(context),
                   decoration: InputDecoration(
-                    hintText: '車両に関する特記事項を入力...',
+                    hintText: l10n.vehicleNoteHint,
                     contentPadding: const EdgeInsets.all(12),
                     filled: true,
                     fillColor: AppColors.surfaceContainer,
@@ -665,6 +680,7 @@ class _VehicleDetail extends StatelessWidget {
 class _ConditionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       leftBorderColor: AppColors.primary,
       child: Column(
@@ -675,7 +691,7 @@ class _ConditionsCard extends StatelessWidget {
               const Icon(Icons.info_outline,
                   color: AppColors.primary, size: 16),
               const SizedBox(width: 8),
-              Text('計測環境 & コンディション',
+              Text(l10n.measurementConditions,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(color: AppColors.primary)),
             ],
@@ -685,11 +701,11 @@ class _ConditionsCard extends StatelessWidget {
             spacing: 0,
             runSpacing: 16,
             children: [
-              _CondDetail(label: '路面状況', value: 'アスファルト (ドライ)'),
-              _CondDetail(label: '標高（平均）', value: '142m (海抜)'),
-              _CondDetail(label: '駆動ロス係数', value: 'SAE J1349'),
-              _CondDetail(label: 'タイヤサイズ', value: 'F: 32 PSI / R: 30 PSI'),
-              _CondDetail(label: '計測ギア', value: '4速プル'),
+              _CondDetail(label: l10n.condRoadCondition, value: 'アスファルト (ドライ)'),
+              _CondDetail(label: l10n.condAltitude, value: '142m (海抜)'),
+              _CondDetail(label: l10n.condDriveLoss, value: 'SAE J1349'),
+              _CondDetail(label: l10n.condTireSize, value: 'F: 32 PSI / R: 30 PSI'),
+              _CondDetail(label: l10n.condMeasurementGear, value: '4速プル'),
             ],
           ),
         ],
@@ -723,6 +739,7 @@ class _CondDetail extends StatelessWidget {
 class _MemoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,7 +749,7 @@ class _MemoCard extends StatelessWidget {
               const Icon(Icons.edit_note,
                   color: AppColors.onSurfaceVariant, size: 16),
               const SizedBox(width: 8),
-              Text('計測記録メモ',
+              Text(l10n.measurementMemo,
                   style: AppTextStyles.labelCaps(context).copyWith(
                     letterSpacing: 1.5,
                   )),
@@ -743,7 +760,7 @@ class _MemoCard extends StatelessWidget {
             maxLines: 3,
             style: AppTextStyles.bodyMd(context),
             decoration: InputDecoration(
-              hintText: 'この計測に関するメモを残す...',
+              hintText: l10n.measurementMemoHint,
               contentPadding: const EdgeInsets.all(16),
               filled: true,
               fillColor: AppColors.surfaceContainer,
@@ -770,6 +787,7 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -790,7 +808,7 @@ class _ActionButtons extends StatelessWidget {
                   const Icon(Icons.ios_share,
                       color: AppColors.onSurface, size: 20),
                   const SizedBox(width: 8),
-                  Text('データをエクスポート',
+                  Text(l10n.exportData,
                       style: AppTextStyles.labelCaps(context)),
                 ],
               ),
@@ -808,7 +826,7 @@ class _ActionButtons extends StatelessWidget {
                 color: AppColors.primary,
                 alignment: Alignment.center,
                 child: Text(
-                  '完了',
+                  l10n.complete,
                   style: GoogleFonts.sora(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/navigation_viewmodel.dart';
 import 'realtime/realtime_view.dart';
@@ -19,6 +20,7 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<NavigationViewModel>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: IndexedStack(
@@ -28,26 +30,26 @@ class MainScreen extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: vm.currentIndex,
         onDestinationSelected: context.read<NavigationViewModel>().setIndex,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.bolt_outlined),
-            selectedIcon: Icon(Icons.bolt),
-            label: 'LIVE',
+            icon: const Icon(Icons.bolt_outlined),
+            selectedIcon: const Icon(Icons.bolt),
+            label: l10n.navLive,
           ),
           NavigationDestination(
-            icon: Icon(Icons.timer_outlined),
-            selectedIcon: Icon(Icons.timer),
-            label: 'TRACK',
+            icon: const Icon(Icons.timer_outlined),
+            selectedIcon: const Icon(Icons.timer),
+            label: l10n.navTrack,
           ),
           NavigationDestination(
-            icon: Icon(Icons.history),
-            selectedIcon: Icon(Icons.history),
-            label: 'HISTORY',
+            icon: const Icon(Icons.history),
+            selectedIcon: const Icon(Icons.history),
+            label: l10n.navHistory,
           ),
           NavigationDestination(
-            icon: Icon(Icons.directions_car_outlined),
-            selectedIcon: Icon(Icons.directions_car),
-            label: 'VEHICLES',
+            icon: const Icon(Icons.directions_car_outlined),
+            selectedIcon: const Icon(Icons.directions_car),
+            label: l10n.navVehicles,
           ),
         ],
       ),

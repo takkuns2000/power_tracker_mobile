@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-class DatabaseService extends ChangeNotifier {
+class DatabaseService {
   Database? _db;
 
   Database get database {
@@ -86,9 +86,7 @@ class DatabaseService extends ChangeNotifier {
     ''');
   }
 
-  @override
   void dispose() {
     _db?.close();
-    super.dispose();
   }
 }

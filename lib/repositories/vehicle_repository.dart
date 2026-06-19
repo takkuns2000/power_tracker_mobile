@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
 import '../models/drivetrain.dart';
 import '../models/gear_ratio.dart';
 import '../models/tire_size.dart';
@@ -51,31 +52,33 @@ class VehicleRepository {
     debugPrint('[VehicleRepository] insert: ${vehicle.name}');
     final now = DateTime.now();
     final v = vehicle.copyWith(createdAt: now, updatedAt: now);
-    final id = await _db.database.insert('vehicles', _toRow(v));
-    await _upsertGearRatios(id, v.gearRatios);
-    final gearRatiosWithId = v.gearRatios
-        .map((g) => g.copyWith(vehicleId: id))
-        .toList();
+    late int id;
+    await _db.database.transaction((txn) async {
+      id = await txn.insert('vehicles', _toRow(v));
+      await _insertGearRatios(txn, id, v.gearRatios);
+    });
     debugPrint('[VehicleRepository] insert done: id=$id');
-    return v.copyWith(id: id, gearRatios: gearRatiosWithId);
+    return v.copyWith(id: id);
   }
 
   Future<void> update(Vehicle vehicle) async {
     debugPrint('[VehicleRepository] update: id=${vehicle.id}');
     assert(vehicle.id != null);
     final v = vehicle.copyWith(updatedAt: DateTime.now());
-    await _db.database.update(
-      'vehicles',
-      _toRow(v),
-      where: 'id = ?',
-      whereArgs: [v.id],
-    );
-    await _db.database.delete(
-      'gear_ratios',
-      where: 'vehicle_id = ?',
-      whereArgs: [v.id],
-    );
-    await _upsertGearRatios(v.id!, v.gearRatios);
+    await _db.database.transaction((txn) async {
+      await txn.update(
+        'vehicles',
+        _toRow(v),
+        where: 'id = ?',
+        whereArgs: [v.id],
+      );
+      await txn.delete(
+        'gear_ratios',
+        where: 'vehicle_id = ?',
+        whereArgs: [v.id],
+      );
+      await _insertGearRatios(txn, v.id!, v.gearRatios);
+    });
   }
 
   Future<void> delete(int id) async {
@@ -91,9 +94,13 @@ class VehicleRepository {
     );
   }
 
-  Future<void> _upsertGearRatios(int vehicleId, List<GearRatio> gears) async {
+  Future<void> _insertGearRatios(
+    DatabaseExecutor executor,
+    int vehicleId,
+    List<GearRatio> gears,
+  ) async {
     for (final gear in gears) {
-      await _db.database.insert('gear_ratios', {
+      await executor.insert('gear_ratios', {
         'vehicle_id': vehicleId,
         'gear_number': gear.gearNumber,
         'ratio': gear.ratio,
@@ -128,7 +135,7 @@ class VehicleRepository {
               id: g['id'] as int?,
               vehicleId: g['vehicle_id'] as int,
               gearNumber: g['gear_number'] as int,
-              ratio: g['ratio'] as double,
+              ratio: (g['ratio'] as num).toDouble(),
             ))
         .toList();
 

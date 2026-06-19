@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
@@ -78,6 +79,7 @@ class _RealtimeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -104,7 +106,7 @@ class _RealtimeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
                     Text(
-                      'LIVE',
+                      l10n.navLive,
                       style: GoogleFonts.sora(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -132,6 +134,7 @@ class _CentralGaugeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
       child: Column(
@@ -159,7 +162,7 @@ class _CentralGaugeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('HP', style: AppTextStyles.labelCaps(context)),
+              Text(l10n.unitHp, style: AppTextStyles.labelCaps(context)),
             ],
           ),
           Container(
@@ -182,7 +185,7 @@ class _CentralGaugeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('km/h', style: AppTextStyles.labelCaps(context)),
+              Text(l10n.unitKmh, style: AppTextStyles.labelCaps(context)),
             ],
           ),
         ],
@@ -203,6 +206,7 @@ class _GpsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -210,7 +214,7 @@ class _GpsGrid extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             leftBorderColor: AppColors.primary,
             child: _GpsItem(
-              label: 'LATITUDE',
+              label: l10n.latitude,
               value: '${latitude.toStringAsFixed(4)}°N',
               icon: Icons.location_on_outlined,
               iconColor: AppColors.primary,
@@ -223,7 +227,7 @@ class _GpsGrid extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             leftBorderColor: AppColors.secondary,
             child: _GpsItem(
-              label: 'LONGITUDE',
+              label: l10n.longitude,
               value: '${longitude.toStringAsFixed(4)}°E',
               icon: Icons.explore_outlined,
               iconColor: AppColors.secondary,
@@ -236,7 +240,7 @@ class _GpsGrid extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             leftBorderColor: AppColors.tertiary,
             child: _GpsItem(
-              label: 'ALTITUDE',
+              label: l10n.altitude,
               value: '${altitudeM.toStringAsFixed(0)} m',
               icon: Icons.landscape_outlined,
               iconColor: AppColors.tertiary,
@@ -292,6 +296,7 @@ class _GpsItem extends StatelessWidget {
 class _HudInfoBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -312,13 +317,13 @@ class _HudInfoBar extends StatelessWidget {
                   color: AppColors.onSurfaceVariant, size: 14),
               const SizedBox(width: 4),
               Text(
-                'GPS 10Hz',
+                l10n.gps10Hz,
                 style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10),
               ),
             ],
           ),
           Text(
-            'SYSTEM ACTIVE',
+            l10n.systemActive,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
               color: AppColors.onSurfaceVariant,
@@ -336,21 +341,22 @@ class _GpsPermissionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final (IconData icon, String message, VoidCallback? onTap) =
         switch (gps.permissionStatus) {
       GpsPermissionStatus.denied => (
           Icons.location_off_outlined,
-          '位置情報の利用が拒否されました。タップして再度許可してください。',
+          l10n.locationDenied,
           gps.retryPermission,
         ),
       GpsPermissionStatus.permanentlyDenied => (
           Icons.settings_outlined,
-          '位置情報の利用が永続的に拒否されています。設定アプリから許可してください。',
+          l10n.locationPermanentlyDenied,
           gps.openSettings,
         ),
       _ => (
           Icons.gps_off_outlined,
-          '位置情報サービスが無効です。端末の設定から有効にしてください。',
+          l10n.locationServiceDisabled,
           null,
         ),
     };

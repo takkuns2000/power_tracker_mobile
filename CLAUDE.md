@@ -33,12 +33,22 @@ fvm flutter build ipa
 - UI text: 言語ファイルで多言語対応（日本語・英語）予定。別ブランチで実装予定のため、現時点のハードコードテキストは後で移行が必要
 
 ### MVVM 厳守ルール
-
+Model - ViewModel - Viewのアーキテクチャを採用する。
+- Model :　モデルクラス
+- ViewModel : UIの状態を持ったり、ロジックの呼び出しなどを行う
+- View : UI部分
 View が直接触れるのは ViewModel のみ。以下は禁止：
 
-- `context.read<Repository>()` — View から Repository を直接取得しない
-- `context.read<XxxService>()` — View から Service を直接取得しない
+- 例`context.read<Repository>()` — View から Repository を直接取得しない
+- 例`context.read<XxxService>()` — View から Service を直接取得しない
 - Repository / Service への直接アクセスは必ず ViewModel 経由にする
+
+### エラーハンドリング規約
+
+- **エラーキャッチは ViewModel で行う**。View に例外を伝播させない（View に try/catch を書かない）
+- ViewModel はエラー状態（`String? loadError` 等）をフィールドで公開し、`clearXxxError()` でリセットする
+- **エラーはすべてダイアログ表示**。View は `addPostFrameCallback` を使い `build()` 内でダイアログを起動する
+- ユーザー操作に起因しないエラー（ロード失敗等）も同様にダイアログで通知する
 
 ## Directory
 

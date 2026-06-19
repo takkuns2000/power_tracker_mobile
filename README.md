@@ -50,9 +50,25 @@ fvm install
 # 依存パッケージのインストール
 fvm flutter pub get
 
+# 言語ファイルの生成（初回および ARB 変更後に必要）
+fvm flutter gen-l10n
+
 # アプリの起動
 fvm flutter run
 ```
+
+## 言語ファイルの管理
+
+テキストは `lib/l10n/app_ja.arb` で一元管理しています。ARB ファイルを編集した後は必ず以下を実行してください。
+
+```bash
+fvm flutter gen-l10n
+```
+
+### 英語対応を追加する場合
+
+1. `lib/l10n/app_en.arb` を作成し、`app_ja.arb` と同じキーで英語テキストを定義する
+2. `lib/main.dart` の `supportedLocales` に `Locale('en')` を追加する
 
 ## Claude Code 開発環境
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'app_theme.dart';
 import 'viewmodels/navigation_viewmodel.dart';
@@ -29,7 +30,7 @@ class HorsepowerTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: dbService),
+        Provider<DatabaseService>.value(value: dbService),
         ChangeNotifierProvider(create: (_) => PurchaseService()),
         Provider(
           create: (ctx) => VehicleRepository(ctx.read<DatabaseService>()),
@@ -53,6 +54,8 @@ class HorsepowerTrackerApp extends StatelessWidget {
         title: 'HorsepowerTracker',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ja')],
         home: const MainScreen(),
       ),
     );
