@@ -34,6 +34,8 @@
 | model_code | TEXT | | 型式（任意） |
 | weight_kg | REAL | NOT NULL | 車両重量（kg） |
 | memo | TEXT | | メモ（任意） |
+| drivetrain | TEXT | | 駆動方式（FWD / RWD / AWD、任意） |
+| displacement_cc | INTEGER | | 排気量（cc、任意） |
 | tire_width_mm | INTEGER | | タイヤ幅（mm）【Pro Mode】 |
 | tire_aspect_ratio | INTEGER | | タイヤ扁平率（%）【Pro Mode】 |
 | tire_rim_inch | INTEGER | | リム径（インチ）【Pro Mode】 |
@@ -48,6 +50,8 @@ CREATE TABLE vehicles (
   model_code        TEXT,
   weight_kg         REAL    NOT NULL,
   memo              TEXT,
+  drivetrain        TEXT,
+  displacement_cc   INTEGER,
   tire_width_mm     INTEGER,
   tire_aspect_ratio INTEGER,
   tire_rim_inch     INTEGER,
@@ -175,6 +179,8 @@ measurements 1 ──── * measurement_data_points  (measurement_id FK)
 | modelCode | String? | 型式（任意） |
 | weightKg | double | 車両重量 kg（必須） |
 | memo | String? | メモ（任意） |
+| drivetrain | Drivetrain? | 駆動方式（FWD / RWD / AWD） |
+| displacementCc | int? | 排気量（cc） |
 | tireSize | TireSize? | タイヤサイズ【Pro Mode】 |
 | gearRatios | List\<GearRatio\> | ギア比リスト【Pro Mode】（gear_number 0 = ファイナル、1〜7 = 変速） |
 | createdAt | DateTime | 作成日時 |

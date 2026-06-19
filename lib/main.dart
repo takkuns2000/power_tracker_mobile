@@ -6,22 +6,40 @@ import 'viewmodels/realtime_viewmodel.dart';
 import 'viewmodels/measurement_viewmodel.dart';
 import 'viewmodels/records_viewmodel.dart';
 import 'viewmodels/garage_viewmodel.dart';
+import 'services/database_service.dart';
 import 'services/gps_service.dart';
+import 'services/purchase_service.dart';
+import 'repositories/vehicle_repository.dart';
 import 'viewmodels/gps_viewmodel.dart';
 import 'views/main_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const HorsepowerTrackerApp());
+  final dbService = DatabaseService();
+  await dbService.initialize();
+  runApp(HorsepowerTrackerApp(dbService: dbService));
 }
 
 class HorsepowerTrackerApp extends StatelessWidget {
-  const HorsepowerTrackerApp({super.key});
+  const HorsepowerTrackerApp({super.key, required this.dbService});
+
+  final DatabaseService dbService;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: dbService),
+        ChangeNotifierProvider(create: (_) => PurchaseService()),
+        Provider(
+          create: (ctx) => VehicleRepository(ctx.read<DatabaseService>()),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => GarageViewModel(
+            ctx.read<VehicleRepository>(),
+            ctx.read<PurchaseService>(),
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => NavigationViewModel()),
         ChangeNotifierProvider(create: (_) => GpsService()..initialize()),
         ChangeNotifierProvider(
@@ -30,7 +48,6 @@ class HorsepowerTrackerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RealtimeViewModel()),
         ChangeNotifierProvider(create: (_) => MeasurementViewModel()),
         ChangeNotifierProvider(create: (_) => RecordsViewModel()),
-        ChangeNotifierProvider(create: (_) => GarageViewModel()),
       ],
       child: MaterialApp(
         title: 'HorsepowerTracker',

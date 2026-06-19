@@ -1,30 +1,75 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../app_theme.dart';
+import '../../models/vehicle.dart';
+import '../../viewmodels/garage_viewmodel.dart';
 import 'vehicle_settings_view.dart';
 import '../widgets/glass_card.dart';
-
-const _mockVehicles = [
-  {
-    'name': 'Supra MK4',
-    'weight': '1,510',
-    'power': '320',
-    'status': 'active',
-  },
-  {
-    'name': 'M3 Competition',
-    'weight': '1,730',
-    'power': '510',
-    'status': 'stable',
-  },
-];
 
 class GarageView extends StatelessWidget {
   const GarageView({super.key});
 
+  void _openVehicleSettings(BuildContext context, {Vehicle? vehicle}) {
+    debugPrint('[Garage] _openVehicleSettings: vehicle=${vehicle?.name}');
+    final garageVm = context.read<GarageViewModel>();
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) {
+              debugPrint('[Garage] MaterialPageRoute builder called');
+              return ChangeNotifierProvider(
+                create: (_) {
+                  debugPrint('[Garage] VehicleSettingsViewModel create start');
+                  final vm = garageVm.createSettingsViewModel(vehicle: vehicle);
+                  debugPrint('[Garage] VehicleSettingsViewModel create done');
+                  return vm;
+                },
+                child: const VehicleSettingsView(),
+              );
+            },
+          ),
+        )
+        .then((_) {
+      debugPrint('[Garage] returned from VehicleSettingsView');
+      if (context.mounted) {
+        context.read<GarageViewModel>().loadVehicles();
+      }
+    });
+  }
+
+  void _onAddTap(BuildContext context) {
+    debugPrint('[Garage] _onAddTap called');
+    final vm = context.read<GarageViewModel>();
+    final isPro = vm.isPro;
+    final vehicleCount = vm.vehicles.length;
+    debugPrint('[Garage] isPro=$isPro, vehicleCount=$vehicleCount');
+    if (!isPro && vehicleCount >= 1) {
+      showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text('Pro Mode が必要です',
+              style: AppTextStyles.headlineLg(context)),
+          content: const Text('複数車両の登録には Pro Mode へのアップグレードが必要です。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('閉じる'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    _openVehicleSettings(context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<GarageViewModel>();
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
@@ -33,32 +78,29 @@ class GarageView extends StatelessWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const VehicleSettingsView()),
-          );
-        },
+        onPressed: () => _onAddTap(context),
         child: const Icon(Icons.add_circle_outlined, size: 28),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _FleetHeader(count: _mockVehicles.length),
-              const SizedBox(height: 24),
-              ..._mockVehicles.map((v) => _VehicleCard(vehicle: v)),
-              const SizedBox(height: 16),
-              _AddVehicleCard(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const VehicleSettingsView()),
+        child: vm.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _FleetHeader(count: vm.vehicles.length),
+                    const SizedBox(height: 24),
+                    ...vm.vehicles.map(
+                      (v) => _VehicleCard(
+                        vehicle: v,
+                        onTap: () =>
+                            _openVehicleSettings(context, vehicle: v),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -122,51 +164,29 @@ class _FleetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Fleet Overview',
-                style: AppTextStyles.labelCaps(context)
-                    .copyWith(color: AppColors.primary, letterSpacing: 1.5)),
-            Text('ガレージ', style: AppTextStyles.headlineLg(context)),
-          ],
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              count.toString().padLeft(2, '0'),
-              style: AppTextStyles.statsMd(context)
-                  .copyWith(color: AppColors.secondary),
-            ),
-            Text('Registered',
-                style: AppTextStyles.labelCaps(context)
-                    .copyWith(fontSize: 10)),
-          ],
-        ),
+        Text('Fleet Overview',
+            style: AppTextStyles.labelCaps(context)
+                .copyWith(color: AppColors.primary, letterSpacing: 1.5)),
+        Text('ガレージ', style: AppTextStyles.headlineLg(context)),
       ],
     );
   }
 }
 
 class _VehicleCard extends StatelessWidget {
-  const _VehicleCard({required this.vehicle});
-  final Map<String, dynamic> vehicle;
+  const _VehicleCard({required this.vehicle, required this.onTap});
+  final Vehicle vehicle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isActive = vehicle['status'] == 'active';
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: GestureDetector(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const VehicleSettingsView()),
-        ),
+        onTap: onTap,
         child: GlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,39 +194,9 @@ class _VehicleCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? AppColors.primary
-                                  : AppColors.secondary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            isActive ? 'Active' : 'Stable',
-                            style: AppTextStyles.labelCaps(context).copyWith(
-                              fontSize: 10,
-                              color: isActive
-                                  ? AppColors.primary
-                                  : AppColors.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        vehicle['name'] as String,
-                        style: AppTextStyles.headlineLg(context),
-                      ),
-                    ],
+                  Text(
+                    vehicle.name,
+                    style: AppTextStyles.headlineLg(context),
                   ),
                   const Icon(Icons.chevron_right,
                       color: AppColors.onSurfaceVariant),
@@ -230,15 +220,15 @@ class _VehicleCard extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: '${vehicle['weight']}',
+                                text: vehicle.weightKg.toStringAsFixed(0),
                                 style: AppTextStyles.statsMd(context),
                               ),
                               TextSpan(
                                 text: ' kg',
-                                style: AppTextStyles.statsMd(context)
-                                    .copyWith(
-                                        fontSize: 12,
-                                        color: AppColors.onSurfaceVariant),
+                                style: AppTextStyles.statsMd(context).copyWith(
+                                  fontSize: 12,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -258,16 +248,16 @@ class _VehicleCard extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: '${vehicle['power']}',
+                                text: '--',
                                 style: AppTextStyles.statsMd(context)
                                     .copyWith(color: AppColors.primary),
                               ),
                               TextSpan(
                                 text: ' hp',
-                                style: AppTextStyles.statsMd(context)
-                                    .copyWith(
-                                        fontSize: 12,
-                                        color: AppColors.onSurfaceVariant),
+                                style: AppTextStyles.statsMd(context).copyWith(
+                                  fontSize: 12,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -292,63 +282,14 @@ class _VehicleCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.directions_car,
-                        color: AppColors.onSurfaceVariant
-                            .withValues(alpha: 0.2),
+                        color:
+                            AppColors.onSurfaceVariant.withValues(alpha: 0.2),
                         size: 48),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AddVehicleCard extends StatelessWidget {
-  const _AddVehicleCard({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 240,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.outline.withValues(alpha: 0.3),
-            width: 2,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                ),
-              ),
-              child: const Icon(Icons.add, color: AppColors.primary, size: 24),
-            ),
-            const SizedBox(height: 16),
-            Text('車両を追加',
-                style: AppTextStyles.statsMd(context)
-                    .copyWith(fontSize: 17)),
-            const SizedBox(height: 4),
-            Text('Register New Asset',
-                style: AppTextStyles.labelCaps(context).copyWith(
-                  fontSize: 10,
-                  color: AppColors.onSurfaceVariant,
-                )),
-          ],
         ),
       ),
     );
