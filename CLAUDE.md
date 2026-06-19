@@ -3,7 +3,16 @@
 **IMPORTANT: 会話を開始する前に必ず [README.md](README.md) を読むこと。** MCPサーバーの設定・利用方法などの重要な開発環境情報が記載されている。
 
 See [README.md](README.md) for project overview.
-Specs: [docs/requirements_specification.md](docs/requirements_specification.md), [docs/basic_specification.md](docs/basic_specification.md), [docs/data_specification.md](docs/data_specification.md)
+Specs: [docs/requirements_specification.md](docs/requirements_specification.md), [docs/basic_specification.md](docs/basic_specification.md), [docs/data_specification.md](docs/data_specification.md), [docs/design_specification.md](docs/design_specification.md)
+
+## Testing
+
+- テスト種別：ユニットテスト（ViewModel・Repository のロジック）。Widget テストは書かない
+- テストファイル配置：`test/viewmodels/`、`test/repositories/`
+- モックライブラリ：`mocktail`
+- テスト内では `package:flutter_test/flutter_test.dart` を使う（Widget テスト機能は使わないがユニットテスト関数を提供する）
+- 実行コマンド：`fvm flutter test`
+- **新機能を実装したら対応するユニットテストを必ず追加すること**
 
 ## Commands
 
@@ -21,7 +30,15 @@ fvm flutter build ipa
 - Pattern: MVVM
 - State: Provider only — no setState
 - Widgets: StatelessWidget only — no StatefulWidget
-- UI text: Japanese only
+- UI text: 言語ファイルで多言語対応（日本語・英語）予定。別ブランチで実装予定のため、現時点のハードコードテキストは後で移行が必要
+
+### MVVM 厳守ルール
+
+View が直接触れるのは ViewModel のみ。以下は禁止：
+
+- `context.read<Repository>()` — View から Repository を直接取得しない
+- `context.read<XxxService>()` — View から Service を直接取得しない
+- Repository / Service への直接アクセスは必ず ViewModel 経由にする
 
 ## Directory
 
