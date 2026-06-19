@@ -319,6 +319,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get systemActive => 'SYSTEM ACTIVE';
 
   @override
+  String get systemInactive => 'SYSTEM INACTIVE';
+
+  @override
   String get locationDenied => '位置情報の利用が拒否されました。タップして再度許可してください。';
 
   @override

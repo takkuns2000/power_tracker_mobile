@@ -46,7 +46,9 @@ class HorsepowerTrackerApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => GpsViewModel(ctx.read<GpsService>()),
         ),
-        ChangeNotifierProvider(create: (_) => RealtimeViewModel()),
+        ChangeNotifierProvider(
+          create: (ctx) => RealtimeViewModel(ctx.read<GpsService>()),
+        ),
         ChangeNotifierProvider(create: (_) => MeasurementViewModel()),
         ChangeNotifierProvider(create: (_) => RecordsViewModel()),
       ],

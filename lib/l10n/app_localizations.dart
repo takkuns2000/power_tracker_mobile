@@ -712,6 +712,12 @@ abstract class AppLocalizations {
   /// **'SYSTEM ACTIVE'**
   String get systemActive;
 
+  /// No description provided for @systemInactive.
+  ///
+  /// In ja, this message translates to:
+  /// **'SYSTEM INACTIVE'**
+  String get systemInactive;
+
   /// No description provided for @locationDenied.
   ///
   /// In ja, this message translates to:
