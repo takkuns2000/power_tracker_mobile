@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../models/drivetrain.dart';
 import '../../viewmodels/vehicle_settings_viewmodel.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class VehicleSettingsView extends StatelessWidget {
@@ -48,27 +49,20 @@ class VehicleSettingsView extends StatelessWidget {
       bottomNavigationBar: _SaveButton(
         isSaving: vm.isSaving,
         onTap: () async {
-          final success = await vm.save();
+          await vm.save();
           if (!context.mounted) return;
-          if (success) {
-            Navigator.of(context).pop();
-          } else {
-            showDialog<void>(
+          if (vm.saveError != null) {
+            final error = vm.saveError!;
+            vm.clearSaveError();
+            showConfirmDialog(
               context: context,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.surface,
-                title: Text(l10n.inputError,
-                    style: AppTextStyles.headlineLg(context)
-                        .copyWith(color: AppColors.error)),
-                content: Text(l10n.requiredFieldsError),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.close),
-                  ),
-                ],
-              ),
+              icon: Icons.error_outline,
+              title: 'エラー',
+              content: Text(error),
+              okLabel: l10n.close,
             );
+          } else {
+            Navigator.of(context).pop();
           }
         },
       ),
@@ -686,7 +680,7 @@ class _GearInput extends StatelessWidget {
 
 class _SaveButton extends StatelessWidget {
   const _SaveButton({required this.onTap, required this.isSaving});
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
   final bool isSaving;
 
   @override

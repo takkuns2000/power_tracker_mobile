@@ -47,8 +47,15 @@ View が直接触れるのは ViewModel のみ。以下は禁止：
 
 - **エラーキャッチは ViewModel で行う**。View に例外を伝播させない（View に try/catch を書かない）
 - ViewModel はエラー状態（`String? loadError` 等）をフィールドで公開し、`clearXxxError()` でリセットする
-- **エラーはすべてダイアログ表示**。View は `addPostFrameCallback` を使い `build()` 内でダイアログを起動する
-- ユーザー操作に起因しないエラー（ロード失敗等）も同様にダイアログで通知する
+- **エラーはすべてダイアログ表示**（汎用 `showConfirmDialog()` を使用）。表示パターンは2種類：
+  - **ユーザー操作起因**（ボタン tap・ドロップダウン選択など）: アクション callback 内で `vm.clearXxxError()` を呼んでから即座に `showConfirmDialog()` を表示。`addPostFrameCallback` は使わない
+  - **自動ロード起因**（VM コンストラクタでの初期読み込みなど）: `build()` 内で `addPostFrameCallback` を使って表示する
+- エラーは**表示と同時にクリア**する（ダイアログ呼び出し直前に `vm.clearXxxError()` を実行）。`onOk` でクリアしない
+
+### コメント規約
+
+- 基本はコメントなし。名前から自明な内容は書かない
+- **数学的計算式・物理モデルなど「なぜその式か」が非自明なロジック**には多行コメントを許可する（例: `ps_calculator.dart` の η 適用理由など）
 
 ## Directory
 

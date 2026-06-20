@@ -7,6 +7,7 @@ import '../../app_theme.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/gps_viewmodel.dart';
 import '../../viewmodels/realtime_viewmodel.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/vehicle_dropdown_card.dart';
 
@@ -59,8 +60,21 @@ class RealtimeView extends StatelessWidget {
                   VehicleDropdownCard(
                     vehicles: garage.vehicles,
                     selectedId: vm.selectedVehicleId,
-                    onChanged: (vehicle) =>
-                        context.read<RealtimeViewModel>().selectVehicle(vehicle),
+                    onChanged: (vehicle) {
+                      final l10n = AppLocalizations.of(context)!;
+                      vm.selectVehicle(vehicle);
+                      if (vm.vehicleError != null) {
+                        final error = vm.vehicleError!;
+                        vm.clearVehicleError();
+                        showConfirmDialog(
+                          context: context,
+                          icon: Icons.error_outline,
+                          title: 'エラー',
+                          content: Text(error),
+                          okLabel: l10n.close,
+                        );
+                      }
+                    },
                   ),
                 ],
               ),

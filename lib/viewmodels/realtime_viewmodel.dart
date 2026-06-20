@@ -23,6 +23,8 @@ class RealtimeViewModel extends ChangeNotifier {
   double? _gpsUpdateHz;
   String? _selectedVehicleId;
   double? _selectedVehicleMass;
+  double? _selectedDriveEfficiency;
+  String? _vehicleError;
   DateTime? _lastGpsTime;
   Timer? _gpsTimeoutTimer;
 
@@ -34,6 +36,11 @@ class RealtimeViewModel extends ChangeNotifier {
   bool get isGpsActive => _isGpsActive;
   double? get gpsUpdateHz => _gpsUpdateHz;
   String? get selectedVehicleId => _selectedVehicleId;
+  String? get vehicleError => _vehicleError;
+
+  void clearVehicleError() {
+    _vehicleError = null;
+  }
 
   void _onGpsUpdate() {
     if (_gpsService.permissionStatus != GpsPermissionStatus.granted) {
@@ -60,12 +67,13 @@ class RealtimeViewModel extends ChangeNotifier {
     _longitude = position.longitude;
     _altitudeM = position.altitude;
 
-    if (_selectedVehicleId != null) {
+    if (_selectedVehicleId != null && _selectedDriveEfficiency != null) {
       _ps = _calculator.calculate(
         currentSpeedMs: position.speed,
         currentAltitudeM: position.altitude,
         currentTime: now,
         vehicleMassKg: _selectedVehicleMass!,
+        driveEfficiency: _selectedDriveEfficiency!,
       );
     } else {
       _ps = null;
@@ -83,16 +91,24 @@ class RealtimeViewModel extends ChangeNotifier {
   }
 
   void selectVehicle(Vehicle? vehicle) {
+    if (vehicle != null && vehicle.drivetrain == null) {
+      _vehicleError = '駆動方式が設定されていません。車両設定を確認してください。';
+      // notifyListeners() 呼ばない — callback 内で直接エラーを処理
+      return;
+    }
     _selectedVehicleId = vehicle?.id?.toString();
     _selectedVehicleMass = vehicle?.weightKg;
+    _selectedDriveEfficiency = vehicle?.drivetrain?.driveEfficiency;
     _calculator.reset();
     notifyListeners();
   }
 
   void initDefaultVehicle(Vehicle vehicle) {
     if (_selectedVehicleId != null) return;
+    if (vehicle.drivetrain == null) return; // エラーなし・スキップ
     _selectedVehicleId = vehicle.id?.toString();
     _selectedVehicleMass = vehicle.weightKg;
+    _selectedDriveEfficiency = vehicle.drivetrain!.driveEfficiency;
     _calculator.reset();
   }
 

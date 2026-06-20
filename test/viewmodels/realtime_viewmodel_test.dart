@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:horsepower_tracker_mobile/models/drivetrain.dart';
 import 'package:horsepower_tracker_mobile/models/vehicle.dart';
 import 'package:horsepower_tracker_mobile/services/gps_service.dart';
 import 'package:horsepower_tracker_mobile/services/ps_calculator.dart';
@@ -55,6 +56,21 @@ Position _pos({
   );
 }
 
+Vehicle _vehicle({
+  int id = 1,
+  String name = 'テスト車両',
+  double weightKg = 1500,
+  Drivetrain drivetrain = Drivetrain.rwd,
+}) =>
+    Vehicle(
+      id: id,
+      name: name,
+      weightKg: weightKg,
+      drivetrain: drivetrain,
+      createdAt: DateTime(2024),
+      updatedAt: DateTime(2024),
+    );
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -79,13 +95,15 @@ void main() {
         currentAltitudeM: 0.0,
         currentTime: DateTime(2024),
         vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
       );
       expect(result, 0.0);
     });
 
-    test('加速時の PS が仕様式と一致する', () {
+    test('RWD (η=0.85) 加速時の PS が仕様式と一致する', () {
       // 手計算（仕様書の式から独立して算出）:
-      //   ke2 = 1500 × 25² / (2 × 0.85) = 937500 / 1.7 = 551470.588 J
+      //   η = 0.85
+      //   ke2 = 1500 × 25² / (2 × 0.85) = 937500 / 1.70 = 551470.588 J
       //   ke1 = 1500 × 10² / 2           = 75000 J
       //   PE  = 0（Δh=0）
       //   PS  = (551470.588 - 75000) / 1s / 735.49875 = 647.82 PS
@@ -95,16 +113,80 @@ void main() {
       final t1 = t0.add(const Duration(seconds: 1));
 
       calc.calculate(
-          currentSpeedMs: 10.0,
-          currentAltitudeM: 0.0,
-          currentTime: t0,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 10.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       final ps = calc.calculate(
-          currentSpeedMs: 25.0,
-          currentAltitudeM: 0.0,
-          currentTime: t1,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 25.0,
+        currentAltitudeM: 0.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
+
+      expect(ps, closeTo(expected, 0.01));
+    });
+
+    test('FWD (η=0.90) 加速時の PS が仕様式と一致する', () {
+      // 手計算:
+      //   η = 0.90
+      //   ke2 = 1500 × 25² / (2 × 0.90) = 937500 / 1.80 = 520833.333 J
+      //   ke1 = 1500 × 10² / 2           = 75000 J
+      //   PS  = (520833.333 - 75000) / 1s / 735.49875 = 606.16 PS
+      const expected = 606.16;
+
+      final t0 = DateTime(2024);
+      final t1 = t0.add(const Duration(seconds: 1));
+
+      calc.calculate(
+        currentSpeedMs: 10.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.fwd.driveEfficiency,
+      );
+
+      final ps = calc.calculate(
+        currentSpeedMs: 25.0,
+        currentAltitudeM: 0.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.fwd.driveEfficiency,
+      );
+
+      expect(ps, closeTo(expected, 0.01));
+    });
+
+    test('AWD (η=0.80) 加速時の PS が仕様式と一致する', () {
+      // 手計算:
+      //   η = 0.80
+      //   ke2 = 1500 × 25² / (2 × 0.80) = 937500 / 1.60 = 585937.500 J
+      //   ke1 = 1500 × 10² / 2           = 75000 J
+      //   PS  = (585937.500 - 75000) / 1s / 735.49875 = 694.68 PS
+      const expected = 694.68;
+
+      final t0 = DateTime(2024);
+      final t1 = t0.add(const Duration(seconds: 1));
+
+      calc.calculate(
+        currentSpeedMs: 10.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.awd.driveEfficiency,
+      );
+
+      final ps = calc.calculate(
+        currentSpeedMs: 25.0,
+        currentAltitudeM: 0.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.awd.driveEfficiency,
+      );
 
       expect(ps, closeTo(expected, 0.01));
     });
@@ -114,23 +196,28 @@ void main() {
       final t1 = t0.add(const Duration(seconds: 1));
 
       calc.calculate(
-          currentSpeedMs: 25.0,
-          currentAltitudeM: 0.0,
-          currentTime: t0,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 25.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       final ps = calc.calculate(
-          currentSpeedMs: 10.0,
-          currentAltitudeM: 0.0,
-          currentTime: t1,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 10.0,
+        currentAltitudeM: 0.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       expect(ps, 0.0);
     });
 
     test('登坂（等速）の PS が仕様式と一致する（PE の η 適用を検証）', () {
       // 手計算（仕様書の式から独立して算出）:
-      //   ke2 = 1500 × 20² / (2 × 0.85) = 600000 / 1.7 = 352941.176 J
+      //   η = 0.85 (RWD)
+      //   ke2 = 1500 × 20² / (2 × 0.85) = 600000 / 1.70 = 352941.176 J
       //   ke1 = 1500 × 20² / 2           = 300000 J
       //   PE  = 1500 × 9.80665 × 5 / 0.85 = 73549.875 / 0.85 = 86529.265 J
       //   PS  = (52941.176 + 86529.265) / 1s / 735.49875 = 189.63 PS
@@ -143,16 +230,20 @@ void main() {
       final t1 = t0.add(const Duration(seconds: 1));
 
       calc.calculate(
-          currentSpeedMs: 20.0,
-          currentAltitudeM: 0.0,
-          currentTime: t0,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 20.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       final ps = calc.calculate(
-          currentSpeedMs: 20.0,
-          currentAltitudeM: 5.0,
-          currentTime: t1,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 20.0,
+        currentAltitudeM: 5.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       expect(ps, closeTo(expected, 0.01));
     });
@@ -162,18 +253,22 @@ void main() {
       final t1 = t0.add(const Duration(seconds: 1));
 
       calc.calculate(
-          currentSpeedMs: 10.0,
-          currentAltitudeM: 0.0,
-          currentTime: t0,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 10.0,
+        currentAltitudeM: 0.0,
+        currentTime: t0,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       calc.reset();
 
       final ps = calc.calculate(
-          currentSpeedMs: 25.0,
-          currentAltitudeM: 0.0,
-          currentTime: t1,
-          vehicleMassKg: 1500);
+        currentSpeedMs: 25.0,
+        currentAltitudeM: 0.0,
+        currentTime: t1,
+        vehicleMassKg: 1500,
+        driveEfficiency: Drivetrain.rwd.driveEfficiency,
+      );
 
       expect(ps, 0.0);
     });
@@ -230,34 +325,22 @@ void main() {
       expect(vm.isGpsActive, true);
     });
 
-    test('加速時は horsepower > 0', () {
+    test('加速時は ps > 0（RWD）', () {
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 
-      vm.selectVehicle(Vehicle(
-          id: 1,
-          name: 'A',
-          weightKg: 1500,
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024)));
-
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.rwd));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
 
       expect(vm.ps, greaterThan(0.0));
     });
 
-    test('減速時は horsepower == 0', () {
+    test('減速時は ps == 0', () {
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 
-      vm.selectVehicle(Vehicle(
-          id: 1,
-          name: 'A',
-          weightKg: 1500,
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024)));
-
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.rwd));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t0));
       gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t1));
 
@@ -276,26 +359,68 @@ void main() {
     });
 
     test('selectVehicle で selectedVehicleId が変わる', () {
-      final v = Vehicle(
-        id: 42,
-        name: 'テスト車両',
-        weightKg: 1200,
-        createdAt: DateTime(2024),
-        updatedAt: DateTime(2024),
-      );
-      vm.selectVehicle(v);
+      vm.selectVehicle(_vehicle(id: 42, drivetrain: Drivetrain.fwd));
       expect(vm.selectedVehicleId, '42');
     });
 
     test('selectVehicle(null) で selectedVehicleId が null になる', () {
-      vm.selectVehicle(Vehicle(
-          id: 1,
-          name: 'A',
-          weightKg: 1000,
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024)));
+      vm.selectVehicle(_vehicle());
       vm.selectVehicle(null);
       expect(vm.selectedVehicleId, isNull);
+    });
+
+    test('drivetrain 未設定の車両を選択すると vehicleError がセットされ ps は null', () {
+      vm.selectVehicle(Vehicle(
+        id: 1,
+        name: 'エラー車両',
+        weightKg: 1500,
+        createdAt: DateTime(2024),
+        updatedAt: DateTime(2024),
+      ));
+      expect(vm.vehicleError, isNotNull);
+      expect(vm.selectedVehicleId, isNull);
+
+      // エラーをクリアできる
+      vm.clearVehicleError();
+      expect(vm.vehicleError, isNull);
+    });
+
+    test('FWD 車両は RWD より低い PS を返す', () {
+      // FWD (η=0.90) は RWD (η=0.85) より η が大きい（損失が少ない）ので、
+      // ke2 が小さくなり PS は低くなる
+      final t0 = DateTime(2024);
+      final t1 = t0.add(const Duration(seconds: 1));
+
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.fwd));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
+      final psFwd = vm.ps!;
+
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.rwd));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
+      final psRwd = vm.ps!;
+
+      expect(psFwd, lessThan(psRwd));
+    });
+
+    test('AWD 車両は RWD より高い PS を返す', () {
+      // AWD (η=0.80) は RWD (η=0.85) より η が小さい（損失が多い）ので、
+      // ke2 が大きくなり PS は高くなる
+      final t0 = DateTime(2024);
+      final t1 = t0.add(const Duration(seconds: 1));
+
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.awd));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
+      final psAwd = vm.ps!;
+
+      vm.selectVehicle(_vehicle(drivetrain: Drivetrain.rwd));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 10.0, time: t0));
+      gps.emit(GpsPermissionStatus.granted, _pos(speedMs: 25.0, time: t1));
+      final psRwd = vm.ps!;
+
+      expect(psAwd, greaterThan(psRwd));
     });
   });
 }
