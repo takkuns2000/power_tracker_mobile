@@ -721,20 +721,32 @@ abstract class AppLocalizations {
   /// No description provided for @locationDenied.
   ///
   /// In ja, this message translates to:
-  /// **'位置情報の利用が拒否されました。タップして再度許可してください。'**
+  /// **'位置情報の利用を許可してください'**
   String get locationDenied;
 
   /// No description provided for @locationPermanentlyDenied.
   ///
   /// In ja, this message translates to:
-  /// **'位置情報の利用が永続的に拒否されています。設定アプリから許可してください。'**
+  /// **'位置情報の利用を許可してください'**
   String get locationPermanentlyDenied;
 
   /// No description provided for @locationServiceDisabled.
   ///
   /// In ja, this message translates to:
-  /// **'位置情報サービスが無効です。端末の設定から有効にしてください。'**
+  /// **'位置情報の利用を許可してください'**
   String get locationServiceDisabled;
+
+  /// No description provided for @locationPermissionMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'位置情報が許可されていません'**
+  String get locationPermissionMessage;
+
+  /// No description provided for @locationPermissionAction.
+  ///
+  /// In ja, this message translates to:
+  /// **'許可する'**
+  String get locationPermissionAction;
 
   /// No description provided for @loadError.
   ///
