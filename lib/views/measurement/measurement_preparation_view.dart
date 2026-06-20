@@ -4,9 +4,11 @@ import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
+import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
 import 'measuring_view.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/vehicle_dropdown_card.dart';
 
 class MeasurementPreparationView extends StatelessWidget {
   const MeasurementPreparationView({super.key});
@@ -28,7 +30,12 @@ class MeasurementPreparationView extends StatelessWidget {
             children: [
               _SectionTitle(),
               const SizedBox(height: 24),
-              _VehicleCard(selectedVehicleId: vm.selectedVehicleId),
+              VehicleDropdownCard(
+                vehicles: context.watch<GarageViewModel>().vehicles,
+                selectedId: vm.selectedVehicleId,
+                onChanged: (vehicle) =>
+                    context.read<MeasurementViewModel>().selectVehicle(vehicle),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -160,69 +167,6 @@ class _SectionTitle extends StatelessWidget {
               .copyWith(color: AppColors.onSurfaceVariant, fontSize: 13),
         ),
       ],
-    );
-  }
-}
-
-class _VehicleCard extends StatelessWidget {
-  const _VehicleCard({required this.selectedVehicleId});
-  final String? selectedVehicleId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return GlassCard(
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Icon(
-              Icons.directions_car,
-              size: 60,
-              color: AppColors.onSurface.withValues(alpha: 0.05),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.selectVehicle,
-                  style: AppTextStyles.labelCaps(context)
-                      .copyWith(color: AppColors.primary)),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedVehicleId,
-                hint: Text(l10n.selectVehicleHint,
-                    style: AppTextStyles.statsMd(context)),
-                decoration: InputDecoration(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(color: AppColors.primary, width: 2),
-                  ),
-                  filled: false,
-                ),
-                dropdownColor: AppColors.surfaceContainer,
-                style: AppTextStyles.statsMd(context),
-                items: const [],
-                onChanged: (value) {
-                  if (value != null) {
-                    context
-                        .read<MeasurementViewModel>()
-                        .selectVehicle(value);
-                  }
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

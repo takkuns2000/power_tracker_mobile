@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/vehicle.dart';
 
 enum MeasurementStatus { idle, measuring, finished }
 
@@ -13,8 +14,8 @@ class MeasurementViewModel extends ChangeNotifier {
   double? get temperatureCelsius => _temperatureCelsius;
   double? get pressureHpa => _pressureHpa;
 
-  void selectVehicle(String vehicleId) {
-    _selectedVehicleId = vehicleId;
+  void selectVehicle(Vehicle? vehicle) {
+    _selectedVehicleId = vehicle?.id?.toString();
     notifyListeners();
   }
 

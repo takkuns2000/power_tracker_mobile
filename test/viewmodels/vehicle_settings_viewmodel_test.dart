@@ -44,7 +44,7 @@ void main() {
   }
 
   group('バリデーション', () {
-    test('名前が空の場合 save() は false を返す', () async {
+    test('名前が空の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.weightController.text = '1200';
       vm.selectDrivetrain(Drivetrain.fwd);
@@ -54,7 +54,7 @@ void main() {
       vm.dispose();
     });
 
-    test('重量が空の場合 save() は false を返す', () async {
+    test('重量が空の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.selectDrivetrain(Drivetrain.fwd);
@@ -64,7 +64,7 @@ void main() {
       vm.dispose();
     });
 
-    test('重量が数値以外の場合 save() は false を返す', () async {
+    test('重量が数値以外の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.weightController.text = 'abc';
@@ -75,7 +75,7 @@ void main() {
       vm.dispose();
     });
 
-    test('駆動方式が未選択の場合 save() は false を返す', () async {
+    test('駆動方式が未選択の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.weightController.text = '1200';
@@ -150,6 +150,17 @@ void main() {
       expect(await vm.save(), true);
       verify(() => repo.update(any())).called(1);
       verifyNever(() => repo.insert(any()));
+      vm.dispose();
+    });
+
+    test('DB例外が発生した場合 false を返す', () async {
+      when(() => repo.update(any())).thenThrow(Exception('DB error'));
+      final vm = build(vehicle: _baseVehicle);
+      vm.nameController.text = '更新後車両';
+      vm.weightController.text = '1300';
+      vm.selectDrivetrain(Drivetrain.rwd);
+
+      expect(await vm.save(), false);
       vm.dispose();
     });
   });
