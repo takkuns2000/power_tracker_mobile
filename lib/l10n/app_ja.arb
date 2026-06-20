@@ -113,9 +113,12 @@
   "gps10Hz": "GPS 10Hz",
   "systemActive": "SYSTEM ACTIVE",
   "systemInactive": "SYSTEM INACTIVE",
-  "locationDenied": "位置情報の利用が拒否されました。タップして再度許可してください。",
-  "locationPermanentlyDenied": "位置情報の利用が永続的に拒否されています。設定アプリから許可してください。",
-  "locationServiceDisabled": "位置情報サービスが無効です。端末の設定から有効にしてください。",
+  "locationDenied": "位置情報の利用を許可してください",
+  "locationPermanentlyDenied": "位置情報の利用を許可してください",
+  "locationServiceDisabled": "位置情報の利用を許可してください",
+
+  "locationPermissionMessage": "位置情報が許可されていません",
+  "locationPermissionAction": "許可する",
 
   "loadError": "データ読み込みエラー",
   "loadErrorMessage": "車両データの読み込みに失敗しました。"

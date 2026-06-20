@@ -322,14 +322,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get systemInactive => 'SYSTEM INACTIVE';
 
   @override
-  String get locationDenied => '位置情報の利用が拒否されました。タップして再度許可してください。';
+  String get locationDenied => '位置情報の利用を許可してください';
 
   @override
-  String get locationPermanentlyDenied =>
-      '位置情報の利用が永続的に拒否されています。設定アプリから許可してください。';
+  String get locationPermanentlyDenied => '位置情報の利用を許可してください';
 
   @override
-  String get locationServiceDisabled => '位置情報サービスが無効です。端末の設定から有効にしてください。';
+  String get locationServiceDisabled => '位置情報の利用を許可してください';
+
+  @override
+  String get locationPermissionMessage => '位置情報が許可されていません';
+
+  @override
+  String get locationPermissionAction => '許可する';
 
   @override
   String get loadError => 'データ読み込みエラー';

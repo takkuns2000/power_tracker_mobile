@@ -36,16 +36,22 @@ class RealtimeView extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Column(
                 children: [
-                  _CentralGaugeCard(
-                    ps: vm.ps,
-                    speedKmh: vm.speedKmh,
+                  Stack(
+                    children: [
+                      _CentralGaugeCard(
+                        ps: vm.ps,
+                        speedKmh: vm.speedKmh,
+                      ),
+                      if (gps.showPermissionBanner)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _GpsPermissionBanner(gps: gps),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  if (gps.permissionStatus != GpsPermissionStatus.granted &&
-                      gps.permissionStatus != GpsPermissionStatus.unknown) ...[
-                    _GpsPermissionBanner(gps: gps),
-                    const SizedBox(height: 16),
-                  ],
                   _GpsGrid(
                     latitude: vm.latitude,
                     longitude: vm.longitude,
@@ -252,29 +258,12 @@ class _GpsGrid extends StatelessWidget {
           Expanded(
             child: GlassCard(
               padding: const EdgeInsets.all(12),
-              leftBorderColor: AppColors.primary,
+              leftBorderColor: AppColors.secondary,
               child: _GpsItem(
                 label: l10n.latitude,
                 value: latitude != null
                     ? '${latitude!.toStringAsFixed(4)}°N'
                     : '-',
-                icon: Icons.location_on_outlined,
-                iconColor: AppColors.primary,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: GlassCard(
-              padding: const EdgeInsets.all(12),
-              leftBorderColor: AppColors.secondary,
-              child: _GpsItem(
-                label: l10n.longitude,
-                value: longitude != null
-                    ? '${longitude!.toStringAsFixed(4)}°E'
-                    : '-',
-                icon: Icons.explore_outlined,
-                iconColor: AppColors.secondary,
               ),
             ),
           ),
@@ -284,12 +273,23 @@ class _GpsGrid extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               leftBorderColor: AppColors.tertiary,
               child: _GpsItem(
+                label: l10n.longitude,
+                value: longitude != null
+                    ? '${longitude!.toStringAsFixed(4)}°E'
+                    : '-',
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: GlassCard(
+              padding: const EdgeInsets.all(12),
+              leftBorderColor: AppColors.accent,
+              child: _GpsItem(
                 label: l10n.altitude,
                 value: altitudeM != null
                     ? '${altitudeM!.toStringAsFixed(0)} m'
                     : '-',
-                icon: Icons.landscape_outlined,
-                iconColor: AppColors.tertiary,
               ),
             ),
           ),
@@ -303,32 +303,18 @@ class _GpsItem extends StatelessWidget {
   const _GpsItem({
     required this.label,
     required this.value,
-    required this.icon,
-    required this.iconColor,
   });
   final String label;
   final String value;
-  final IconData icon;
-  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(
-                label,
-                style: AppTextStyles.labelCaps(context)
-                    .copyWith(fontSize: 9),
-              ),
-            ),
-            Icon(icon,
-                color: iconColor.withValues(alpha: 0.4), size: 16),
-          ],
+        Text(
+          label,
+          style: AppTextStyles.labelCaps(context).copyWith(fontSize: 9),
         ),
         const SizedBox(height: 4),
         Text(
@@ -399,38 +385,42 @@ class _GpsPermissionBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final (IconData icon, String message, VoidCallback? onTap) =
-        switch (gps.permissionStatus) {
-      GpsPermissionStatus.denied => (
-          Icons.location_off_outlined,
-          l10n.locationDenied,
-          gps.retryPermission,
-        ),
-      GpsPermissionStatus.permanentlyDenied => (
-          Icons.settings_outlined,
-          l10n.locationPermanentlyDenied,
-          gps.openSettings,
-        ),
-      _ => (
-          Icons.gps_off_outlined,
-          l10n.locationServiceDisabled,
-          null,
-        ),
-    };
-
     return GestureDetector(
-      onTap: onTap,
-      child: GlassCard(
+      onTap: gps.handlePermissionAction,
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        leftBorderColor: AppColors.error,
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.7), width: 1),
+        ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.error, size: 18),
+            const Icon(Icons.location_off_outlined, color: AppColors.warning, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                message,
-                style: AppTextStyles.bodyMd(context).copyWith(fontSize: 12),
+                l10n.locationPermissionMessage,
+                style: AppTextStyles.bodyMd(context).copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.7), width: 1),
+              ),
+              child: Text(
+                l10n.locationPermissionAction,
+                style: AppTextStyles.labelCaps(context).copyWith(
+                  fontSize: 14,
+                  color: AppColors.onSurface,
+                ),
               ),
             ),
           ],

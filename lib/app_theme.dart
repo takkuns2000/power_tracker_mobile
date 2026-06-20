@@ -15,6 +15,8 @@ class AppColors {
   static const onSurfaceVariant = Color(0xFFE4BEBC);
   static const outline = Color(0xFF5B403F);
   static const error = Color(0xFFFFB4AB);
+  static const warning = Color(0xFFFFD60A);
+  static const accent = Color(0xFFE8956D);
 }
 
 class AppTextStyles {
