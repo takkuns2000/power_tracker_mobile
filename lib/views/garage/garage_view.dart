@@ -7,7 +7,6 @@ import '../../app_theme.dart';
 import '../../models/vehicle.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import 'vehicle_settings_view.dart';
-import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class GarageView extends StatelessWidget {
@@ -49,12 +48,20 @@ class GarageView extends StatelessWidget {
     debugPrint('[Garage] isPro=$isPro, vehicleCount=$vehicleCount');
     if (!isPro && vehicleCount >= 1) {
       final l10n = AppLocalizations.of(context)!;
-      showConfirmDialog(
+      showDialog<void>(
         context: context,
-        icon: Icons.lock_outline,
-        title: l10n.proModeRequired,
-        content: Text(l10n.proModeRequiredMessage),
-        okLabel: l10n.close,
+        builder: (_) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text(l10n.proModeRequired,
+              style: AppTextStyles.headlineLg(context)),
+          content: Text(l10n.proModeRequiredMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.close),
+            ),
+          ],
+        ),
       );
       return;
     }
@@ -69,16 +76,24 @@ class GarageView extends StatelessWidget {
     if (vm.loadError != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) return;
-        showConfirmDialog(
+        showDialog<void>(
           context: context,
-          icon: Icons.error_outline,
-          title: l10n.loadError,
-          content: Text(l10n.loadErrorMessage),
-          okLabel: l10n.close,
-          onOk: () {
-            Navigator.of(context).pop();
-            vm.clearLoadError();
-          },
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.loadError,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(l10n.loadErrorMessage),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  vm.clearLoadError();
+                },
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
         );
       });
     }

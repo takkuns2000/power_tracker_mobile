@@ -44,74 +44,57 @@ void main() {
   }
 
   group('バリデーション', () {
-    test('名前が空の場合 saveError がセットされ insert() は呼ばれない', () async {
+    test('名前が空の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.weightController.text = '1200';
       vm.selectDrivetrain(Drivetrain.fwd);
 
-      await vm.save();
-      expect(vm.saveError, isNotNull);
+      expect(await vm.save(), false);
       verifyNever(() => repo.insert(any()));
       vm.dispose();
     });
 
-    test('重量が空の場合 saveError がセットされ insert() は呼ばれない', () async {
+    test('重量が空の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.selectDrivetrain(Drivetrain.fwd);
 
-      await vm.save();
-      expect(vm.saveError, isNotNull);
+      expect(await vm.save(), false);
       verifyNever(() => repo.insert(any()));
       vm.dispose();
     });
 
-    test('重量が数値以外の場合 saveError がセットされ insert() は呼ばれない', () async {
+    test('重量が数値以外の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.weightController.text = 'abc';
       vm.selectDrivetrain(Drivetrain.fwd);
 
-      await vm.save();
-      expect(vm.saveError, isNotNull);
+      expect(await vm.save(), false);
       verifyNever(() => repo.insert(any()));
       vm.dispose();
     });
 
-    test('駆動方式が未選択の場合 saveError がセットされ insert() は呼ばれない', () async {
+    test('駆動方式が未選択の場合 false を返し insert() は呼ばれない', () async {
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.weightController.text = '1200';
 
-      await vm.save();
-      expect(vm.saveError, isNotNull);
+      expect(await vm.save(), false);
       verifyNever(() => repo.insert(any()));
-      vm.dispose();
-    });
-
-    test('saveError は clearSaveError() でリセットされる', () async {
-      final vm = build();
-      vm.nameController.text = 'テスト車両';
-      vm.weightController.text = '1200';
-
-      await vm.save();
-      expect(vm.saveError, isNotNull);
-      vm.clearSaveError();
-      expect(vm.saveError, isNull);
       vm.dispose();
     });
   });
 
   group('新規保存', () {
-    test('必須項目が揃っている場合 insert() を呼び saveSuccess が true になる', () async {
+    test('必須項目が揃っている場合 insert() を呼び true を返す', () async {
       when(() => repo.insert(any())).thenAnswer((_) async => _baseVehicle);
       final vm = build();
       vm.nameController.text = 'テスト車両';
       vm.weightController.text = '1200';
       vm.selectDrivetrain(Drivetrain.fwd);
 
-      await vm.save();
-      expect(vm.saveError, isNull);
+      expect(await vm.save(), true);
       verify(() => repo.insert(any())).called(1);
       vm.dispose();
     });
@@ -129,8 +112,7 @@ void main() {
       vm.tireRimController.text = '18';
       vm.finalGearController.text = '3.9';
 
-      await vm.save();
-      expect(vm.saveError, isNull);
+      expect(await vm.save(), true);
       final captured =
           verify(() => repo.insert(captureAny())).captured.first as Vehicle;
       expect(captured.tireSize?.widthMm, 225);
@@ -158,29 +140,27 @@ void main() {
   });
 
   group('編集保存', () {
-    test('既存 vehicle がある場合 update() を呼び saveError が null になる', () async {
+    test('既存 vehicle がある場合 update() を呼び true を返す', () async {
       when(() => repo.update(any())).thenAnswer((_) async {});
       final vm = build(vehicle: _baseVehicle);
       vm.nameController.text = '更新後車両';
       vm.weightController.text = '1300';
       vm.selectDrivetrain(Drivetrain.rwd);
 
-      await vm.save();
-      expect(vm.saveError, isNull);
+      expect(await vm.save(), true);
       verify(() => repo.update(any())).called(1);
       verifyNever(() => repo.insert(any()));
       vm.dispose();
     });
 
-    test('DB例外が発生した場合 saveError がセットされる', () async {
+    test('DB例外が発生した場合 false を返す', () async {
       when(() => repo.update(any())).thenThrow(Exception('DB error'));
       final vm = build(vehicle: _baseVehicle);
       vm.nameController.text = '更新後車両';
       vm.weightController.text = '1300';
       vm.selectDrivetrain(Drivetrain.rwd);
 
-      await vm.save();
-      expect(vm.saveError, isNotNull);
+      expect(await vm.save(), false);
       vm.dispose();
     });
   });

@@ -59,14 +59,7 @@ class VehicleSettingsViewModel extends ChangeNotifier {
   Drivetrain? get drivetrain => _drivetrain;
 
   bool _isSaving = false;
-  String? _saveError;
-
   bool get isSaving => _isSaving;
-  String? get saveError => _saveError;
-
-  void clearSaveError() {
-    _saveError = null;
-  }
 
   bool get isEditing => _editingVehicle != null;
 
@@ -75,24 +68,34 @@ class VehicleSettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> save() async {
+  Future<bool> save() async {
+    final isPro = _purchaseService.isPro;
+    debugPrint('[VehicleSettingsViewModel] save start: isPro=$isPro');
     final name = nameController.text.trim();
     final weightText = weightController.text.trim();
+    if (name.isEmpty || weightText.isEmpty) {
+      debugPrint('[VehicleSettingsViewModel] save aborted: name or weight empty');
+      return false;
+    }
     final weight = double.tryParse(weightText);
-    if (name.isEmpty || weightText.isEmpty || weight == null || _drivetrain == null) {
-      _saveError = 'ニックネーム・重量・駆動方式は必須項目です。\n入力内容を確認してください。';
-      return;
+    if (weight == null) {
+      debugPrint('[VehicleSettingsViewModel] save aborted: invalid weight');
+      return false;
+    }
+    if (_drivetrain == null) {
+      debugPrint('[VehicleSettingsViewModel] save aborted: drivetrain not selected');
+      return false;
     }
 
     _isSaving = true;
     notifyListeners();
 
     try {
-      final isPro = _purchaseService.isPro;
       final modelCode = modelCodeController.text.trim().isEmpty
           ? null
           : modelCodeController.text.trim();
-      final displacement = int.tryParse(displacementController.text.trim());
+      final displacement =
+          int.tryParse(displacementController.text.trim());
       final memo = memoController.text.trim().isEmpty
           ? null
           : memoController.text.trim();
@@ -105,10 +108,12 @@ class VehicleSettingsViewModel extends ChangeNotifier {
         final aspect = int.tryParse(tireAspectController.text.trim());
         final rim = int.tryParse(tireRimController.text.trim());
         if (width != null && aspect != null && rim != null) {
-          tireSize = TireSize(widthMm: width, aspectRatio: aspect, rimInch: rim);
+          tireSize =
+              TireSize(widthMm: width, aspectRatio: aspect, rimInch: rim);
         }
 
-        final finalRatio = double.tryParse(finalGearController.text.trim());
+        final finalRatio =
+            double.tryParse(finalGearController.text.trim());
         if (finalRatio != null) {
           gearRatios.add(GearRatio(
             vehicleId: _editingVehicle?.id ?? 0,
@@ -155,9 +160,11 @@ class VehicleSettingsViewModel extends ChangeNotifier {
           updatedAt: DateTime.now(),
         ));
       }
-      _saveError = null;
+      debugPrint('[VehicleSettingsViewModel] save done');
+      return true;
     } catch (e) {
-      _saveError = '保存中にエラーが発生しました。\nもう一度お試しください。';
+      debugPrint('[VehicleSettingsViewModel] save error: $e');
+      return false;
     } finally {
       _isSaving = false;
       notifyListeners();
