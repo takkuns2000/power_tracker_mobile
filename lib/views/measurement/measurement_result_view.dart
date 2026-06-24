@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../models/measurement.dart';
-import '../../repositories/measurement_repository.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/measurement_result_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
@@ -13,17 +12,14 @@ import '../widgets/glass_card.dart';
 import '../widgets/pro_lock_wrapper.dart';
 
 class MeasurementResultView extends StatelessWidget {
-  const MeasurementResultView({super.key, required this.measurement});
+  const MeasurementResultView({super.key, required this.viewModel});
 
-  final Measurement measurement;
+  final MeasurementResultViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (ctx) => MeasurementResultViewModel(
-        ctx.read<MeasurementRepository>(),
-        measurement,
-      ),
+    return ChangeNotifierProvider<MeasurementResultViewModel>.value(
+      value: viewModel,
       child: const _MeasurementResultBody(),
     );
   }
@@ -68,7 +64,37 @@ class _MeasurementResultBody extends StatelessWidget {
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
       appBar: _ResultAppBar(
-        onClose: () {
+        onClose: () async {
+          final resultVm = context.read<MeasurementResultViewModel>();
+          if (resultVm.hasPendingChanges) {
+            final shouldSave = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: AppColors.surface,
+                title: Text('メモの変更',
+                    style: AppTextStyles.headlineLg(ctx)
+                        .copyWith(color: AppColors.onSurface)),
+                content: const Text('入力中のメモを保存しますか？'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('変更を削除',
+                        style: TextStyle(color: AppColors.error)),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('保存する',
+                        style: TextStyle(color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            );
+            if (!context.mounted) return;
+            if (shouldSave == true) {
+              await resultVm.savePendingMemo();
+              if (!context.mounted) return;
+            }
+          }
           context.read<MeasurementViewModel>().reset();
           Navigator.of(context).popUntil((route) => route.isFirst);
         },
@@ -107,6 +133,9 @@ class _MeasurementResultBody extends StatelessWidget {
                 initialMemo: m.memo,
                 onSave: (memo) =>
                     context.read<MeasurementResultViewModel>().saveMemo(memo),
+                onChanged: (text) => context
+                    .read<MeasurementResultViewModel>()
+                    .updatePendingMemo(text),
               ),
               const SizedBox(height: 24),
               const _ShareRow(),
@@ -120,7 +149,7 @@ class _MeasurementResultBody extends StatelessWidget {
 
 class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _ResultAppBar({required this.onClose});
-  final VoidCallback onClose;
+  final Future<void> Function() onClose;
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -685,9 +714,14 @@ class _CondDetail extends StatelessWidget {
 }
 
 class _MemoCard extends StatelessWidget {
-  const _MemoCard({required this.initialMemo, required this.onSave});
+  const _MemoCard({
+    required this.initialMemo,
+    required this.onSave,
+    required this.onChanged,
+  });
   final String? initialMemo;
   final Future<void> Function(String?) onSave;
+  final void Function(String) onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -726,6 +760,7 @@ class _MemoCard extends StatelessWidget {
                 borderSide: const BorderSide(color: AppColors.primary),
               ),
             ),
+            onChanged: onChanged,
             onFieldSubmitted: onSave,
           ),
         ],

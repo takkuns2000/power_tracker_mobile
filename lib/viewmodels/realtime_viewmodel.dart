@@ -43,9 +43,7 @@ class RealtimeViewModel extends ChangeNotifier {
 
   void _onGpsUpdate() {
     if (_gpsService.permissionStatus != GpsPermissionStatus.granted) {
-      _clearValues();
-      _calculator.reset();
-      notifyListeners();
+      _handlePermissionDenied();
       return;
     }
 
@@ -96,6 +94,12 @@ class RealtimeViewModel extends ChangeNotifier {
 
   void initDefaultVehicle(Vehicle vehicle) {
     _vehicleSelection.selectDefaultIfEmpty(vehicle);
+  }
+
+  void _handlePermissionDenied() {
+    _clearValues();
+    _calculator.reset();
+    notifyListeners();
   }
 
   void _clearValues() {

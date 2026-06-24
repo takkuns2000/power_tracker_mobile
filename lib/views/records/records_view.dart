@@ -79,11 +79,18 @@ class RecordsView extends StatelessWidget {
       }
       widgets.add(_RecordCard(
         measurement: record,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MeasurementResultView(measurement: record),
-          ),
-        ),
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => MeasurementResultView(
+                viewModel: context
+                    .read<RecordsViewModel>()
+                    .createResultViewModel(record),
+              ),
+            ),
+          );
+          if (context.mounted) context.read<RecordsViewModel>().load();
+        },
       ));
     }
     return widgets;

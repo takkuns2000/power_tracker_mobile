@@ -1,13 +1,17 @@
 import 'package:flutter/foundation.dart';
 import '../models/measurement.dart';
 import '../repositories/measurement_repository.dart';
+import 'measurement_result_viewmodel.dart';
+import 'navigation_viewmodel.dart';
 
 class RecordsViewModel extends ChangeNotifier {
-  RecordsViewModel(this._repository) {
+  RecordsViewModel(this._repository, this._navigation) {
+    _navigation.addListener(_onNavigate);
     load();
   }
 
   final MeasurementRepository _repository;
+  final NavigationViewModel _navigation;
 
   List<Measurement> _records = [];
   bool _isLoading = false;
@@ -16,6 +20,14 @@ class RecordsViewModel extends ChangeNotifier {
   List<Measurement> get records => List.unmodifiable(_records);
   bool get isLoading => _isLoading;
   String? get loadError => _loadError;
+
+  MeasurementResultViewModel createResultViewModel(Measurement m) {
+    return MeasurementResultViewModel(_repository, m);
+  }
+
+  void _onNavigate() {
+    if (_navigation.currentIndex == 2) load();
+  }
 
   void clearLoadError() {
     _loadError = null;
@@ -33,5 +45,11 @@ class RecordsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _navigation.removeListener(_onNavigate);
+    super.dispose();
   }
 }

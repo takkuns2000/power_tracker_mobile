@@ -76,11 +76,12 @@ class MeasuringView extends StatelessWidget {
               final vm = context.read<MeasurementViewModel>();
               await vm.stopMeasurement();
               if (!context.mounted) return;
-              final saved = vm.savedMeasurement;
-              if (saved != null) {
+              if (vm.savedMeasurement != null) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => MeasurementResultView(measurement: saved),
+                    builder: (_) => MeasurementResultView(
+                      viewModel: vm.createResultViewModel(),
+                    ),
                   ),
                 );
               }
@@ -269,7 +270,6 @@ class _HpCard extends StatelessWidget {
     final peakLabel = maxPs > 0
         ? 'PEAK ${maxPs.toStringAsFixed(1)} ${l10n.unitPs}'
         : l10n.peakPowerDefault;
-
 
     return GlassCard(
       padding: const EdgeInsets.all(20),

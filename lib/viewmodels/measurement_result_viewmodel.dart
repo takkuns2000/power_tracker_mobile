@@ -8,103 +8,17 @@ import '../models/measurement.dart';
 import '../repositories/measurement_repository.dart';
 import '../services/ps_calculator.dart';
 
-// 4:3 シェア画像を PictureRecorder で直接描画（BackdropFilter 非依存）
-Future<File> _createShareImage(Measurement m) async {
-  const w = 800.0;
-  const h = 600.0;
-  const bg = Color(0xFF0D1B2A);
-  const primary = Color(0xFFFFB3B1);
-  const onSurface = Color(0xFFE8E8F0);
-  const muted = Color(0xFF8890A4);
-
-  final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w, h));
-
-  canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = bg);
-
-  canvas.drawRect(
-    Rect.fromLTWH(0, 0, w, 5),
-    Paint()..color = primary,
-  );
-
-  void drawText(
-    String text,
-    double x,
-    double y, {
-    double fontSize = 16,
-    Color color = onSurface,
-    FontWeight weight = FontWeight.w400,
-    bool italic = false,
-  }) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontSize: fontSize,
-          color: color,
-          fontWeight: weight,
-          fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: w - x - 40);
-    tp.paint(canvas, Offset(x, y));
-  }
-
-  drawText('#HorsepowerTracker', 48, 28, fontSize: 13, color: muted);
-
-  drawText(
-    m.maxHp.toStringAsFixed(1),
-    48,
-    80,
-    fontSize: 180,
-    color: primary,
-    weight: FontWeight.w800,
-    italic: true,
-  );
-
-  drawText('HP', 48, 280,
-      fontSize: 48,
-      color: primary.withValues(alpha: 0.7),
-      weight: FontWeight.w700);
-
-  canvas.drawLine(
-    const Offset(48, 380),
-    const Offset(752, 380),
-    Paint()
-      ..color = primary.withValues(alpha: 0.2)
-      ..strokeWidth = 1,
-  );
-
-  drawText(m.vehicleName, 48, 400, fontSize: 36, weight: FontWeight.w700);
-
-  final date =
-      '${m.measuredAt.year}.${m.measuredAt.month.toString().padLeft(2, '0')}.${m.measuredAt.day.toString().padLeft(2, '0')}  '
-      '${m.measuredAt.hour.toString().padLeft(2, '0')}:${m.measuredAt.minute.toString().padLeft(2, '0')}';
-  drawText(date, 48, 460, fontSize: 18, color: muted);
-
-  drawText('${m.vehicleWeightKg.toStringAsFixed(0)} kg', 48, 496,
-      fontSize: 16, color: muted);
-
-  final picture = recorder.endRecording();
-  final image = await picture.toImage(w.toInt(), h.toInt());
-  final data = await image.toByteData(format: ui.ImageByteFormat.png);
-  final bytes = Uint8List.view(data!.buffer);
-
-  final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/hp_share.png');
-  await file.writeAsBytes(bytes);
-  return file;
-}
-
 class MeasurementResultViewModel extends ChangeNotifier {
   MeasurementResultViewModel(this._repository, Measurement measurement)
       : _measurement = measurement,
-        _hpValues = _computeHpValues(measurement);
+        _hpValues = _computeHpValues(measurement) {
+    _pendingMemo = measurement.memo;
+  }
 
   final MeasurementRepository _repository;
   Measurement _measurement;
   List<double> _hpValues;
+  String? _pendingMemo;
 
   String? _saveError;
   String? _shareError;
@@ -115,6 +29,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
   String? get saveError => _saveError;
   String? get shareError => _shareError;
   bool get isVehicleExpanded => _isVehicleExpanded;
+  bool get hasPendingChanges => _pendingMemo != _measurement.memo;
 
   void clearSaveError() {
     _saveError = null;
@@ -129,6 +44,15 @@ class MeasurementResultViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updatePendingMemo(String text) {
+    _pendingMemo = text.isEmpty ? null : text;
+  }
+
+  Future<void> savePendingMemo() async {
+    if (_pendingMemo == _measurement.memo) return;
+    await saveMemo(_pendingMemo);
+  }
+
   Future<void> saveMemo(String? memo) async {
     final id = _measurement.id;
     if (id == null) return;
@@ -136,6 +60,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
     try {
       await _repository.updateMemo(id, normalized);
       _measurement = _measurement.copyWith(memo: normalized);
+      _pendingMemo = normalized;
     } catch (e) {
       debugPrint('[MeasurementResultViewModel] saveMemo error: $e');
       _saveError = 'メモの保存に失敗しました。';
@@ -214,5 +139,84 @@ class MeasurementResultViewModel extends ChangeNotifier {
         driveEfficiency: driveEfficiency,
       );
     }).toList();
+  }
+
+  Future<File> _createShareImage(Measurement m) async {
+    const w = 800.0;
+    const h = 600.0;
+    const bg = Color(0xFF0D1B2A);
+    const primary = Color(0xFFFFB3B1);
+    const onSurface = Color(0xFFE8E8F0);
+    const muted = Color(0xFF8890A4);
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w, h));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = bg);
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, 5), Paint()..color = primary);
+
+    void drawText(
+      String text,
+      double x,
+      double y, {
+      double fontSize = 16,
+      Color color = onSurface,
+      FontWeight weight = FontWeight.w400,
+      bool italic = false,
+    }) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            fontSize: fontSize,
+            color: color,
+            fontWeight: weight,
+            fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: w - x - 40);
+      tp.paint(canvas, Offset(x, y));
+    }
+
+    drawText('#HorsepowerTracker', 48, 28, fontSize: 13, color: muted);
+    drawText(
+      m.maxHp.toStringAsFixed(1),
+      48,
+      80,
+      fontSize: 180,
+      color: primary,
+      weight: FontWeight.w800,
+      italic: true,
+    );
+    drawText('HP', 48, 280,
+        fontSize: 48,
+        color: primary.withValues(alpha: 0.7),
+        weight: FontWeight.w700);
+    canvas.drawLine(
+      const Offset(48, 380),
+      const Offset(752, 380),
+      Paint()
+        ..color = primary.withValues(alpha: 0.2)
+        ..strokeWidth = 1,
+    );
+    drawText(m.vehicleName, 48, 400, fontSize: 36, weight: FontWeight.w700);
+
+    final date =
+        '${m.measuredAt.year}.${m.measuredAt.month.toString().padLeft(2, '0')}.${m.measuredAt.day.toString().padLeft(2, '0')}  '
+        '${m.measuredAt.hour.toString().padLeft(2, '0')}:${m.measuredAt.minute.toString().padLeft(2, '0')}';
+    drawText(date, 48, 460, fontSize: 18, color: muted);
+    drawText('${m.vehicleWeightKg.toStringAsFixed(0)} kg', 48, 496,
+        fontSize: 16, color: muted);
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(w.toInt(), h.toInt());
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    final bytes = Uint8List.view(data!.buffer);
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/hp_share.png');
+    await file.writeAsBytes(bytes);
+    return file;
   }
 }

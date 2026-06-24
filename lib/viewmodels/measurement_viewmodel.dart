@@ -6,6 +6,7 @@ import '../models/vehicle.dart';
 import '../repositories/measurement_repository.dart';
 import '../services/gps_service.dart';
 import '../services/ps_calculator.dart';
+import 'measurement_result_viewmodel.dart';
 import 'vehicle_selection_viewmodel.dart';
 
 enum MeasurementStatus { idle, measuring, finished }
@@ -80,6 +81,10 @@ class MeasurementViewModel extends ChangeNotifier {
     if (hz >= 2) return 4;
     if (hz >= 1) return 3;
     return 1;
+  }
+
+  MeasurementResultViewModel createResultViewModel() {
+    return MeasurementResultViewModel(_repository, _savedMeasurement!);
   }
 
   void clearSaveError() {

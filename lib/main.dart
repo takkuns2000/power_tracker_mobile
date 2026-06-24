@@ -66,7 +66,10 @@ class HorsepowerTrackerApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => RecordsViewModel(ctx.read<MeasurementRepository>()),
+          create: (ctx) => RecordsViewModel(
+            ctx.read<MeasurementRepository>(),
+            ctx.read<NavigationViewModel>(),
+          ),
         ),
       ],
       child: MaterialApp(
