@@ -143,6 +143,9 @@ RPM = speed[km/h] × 1000/60 / (π × tireDiameter[m]) × finalGearRatio × gear
 
 - `MeasurementResultViewModel` で結果データを管理（`measurement_result_viewmodel.dart`）
 - HP 推移グラフ（CustomPaint 折れ線）
+  - データ型: `List<HpPoint>`（`typedef HpPoint = ({int offsetMs, double ps})`、`measurement_result_viewmodel.dart` で定義）
+  - 横軸は `offsetMs`（実経過時間）に比例。GPS 更新間隔が不均一でも時間軸が正確になる
+  - インデックス均等割りは使用禁止（GPS 更新頻度が変動すると時間軸が歪むため）
 - 駆動ロス係数スライダー（Pro: リセットボタンあり）
 - メモ入力・保存
 - 車両情報展開パネル

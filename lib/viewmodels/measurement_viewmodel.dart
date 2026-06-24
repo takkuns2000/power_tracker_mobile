@@ -31,7 +31,7 @@ class MeasurementViewModel extends ChangeNotifier {
   DateTime? _startTime;
   final List<MeasurementDataPoint> _dataPoints = [];
 
-  static const Duration _kGpsTimeout = Duration(seconds: 3);
+  static const Duration _kGpsTimeout = Duration(seconds: 5);
 
   Measurement? _savedMeasurement;
   String? _saveError;

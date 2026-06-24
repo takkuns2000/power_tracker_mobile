@@ -8,6 +8,8 @@ import '../models/measurement.dart';
 import '../repositories/measurement_repository.dart';
 import '../services/ps_calculator.dart';
 
+typedef HpPoint = ({int offsetMs, double ps});
+
 class MeasurementResultViewModel extends ChangeNotifier {
   MeasurementResultViewModel(this._repository, Measurement measurement)
       : _measurement = measurement,
@@ -17,7 +19,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
 
   final MeasurementRepository _repository;
   Measurement _measurement;
-  List<double> _hpValues;
+  List<HpPoint> _hpValues;
   String? _pendingMemo;
 
   String? _saveError;
@@ -25,7 +27,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
   bool _isVehicleExpanded = false;
 
   Measurement get measurement => _measurement;
-  List<double> get hpValues => _hpValues;
+  List<HpPoint> get hpValues => _hpValues;
   String? get saveError => _saveError;
   String? get shareError => _shareError;
   bool get isVehicleExpanded => _isVehicleExpanded;
@@ -125,19 +127,20 @@ class MeasurementResultViewModel extends ChangeNotifier {
     }
   }
 
-  static List<double> _computeHpValues(Measurement m) {
+  static List<HpPoint> _computeHpValues(Measurement m) {
     if (m.dataPoints.isEmpty) return [];
     final calculator = PsCalculatorService();
     final driveEfficiency = 1.0 - m.driveLossCoefficient;
     return m.dataPoints.map((dp) {
       final time = m.measuredAt.add(Duration(milliseconds: dp.offsetMs));
-      return calculator.calculate(
+      final ps = calculator.calculate(
         currentSpeedMs: dp.speedKmh / 3.6,
         currentAltitudeM: dp.altitudeM,
         currentTime: time,
         vehicleMassKg: m.vehicleWeightKg,
         driveEfficiency: driveEfficiency,
       );
+      return (offsetMs: dp.offsetMs, ps: ps);
     }).toList();
   }
 

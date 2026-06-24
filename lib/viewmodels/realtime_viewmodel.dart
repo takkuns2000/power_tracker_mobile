@@ -6,7 +6,7 @@ import '../services/ps_calculator.dart';
 import 'vehicle_selection_viewmodel.dart';
 
 class RealtimeViewModel extends ChangeNotifier {
-  static const Duration _kGpsTimeout = Duration(seconds: 3);
+  static const Duration _kGpsTimeout = Duration(seconds: 5);
 
   RealtimeViewModel(this._gpsService, this._vehicleSelection) {
     _gpsService.addListener(_onGpsUpdate);
