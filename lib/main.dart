@@ -12,6 +12,8 @@ import 'services/gps_service.dart';
 import 'services/purchase_service.dart';
 import 'repositories/vehicle_repository.dart';
 import 'viewmodels/gps_viewmodel.dart';
+import 'viewmodels/vehicle_selection_viewmodel.dart';
+import 'repositories/measurement_repository.dart';
 import 'views/main_screen.dart';
 
 void main() async {
@@ -46,11 +48,29 @@ class HorsepowerTrackerApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => GpsViewModel(ctx.read<GpsService>()),
         ),
-        ChangeNotifierProvider(
-          create: (ctx) => RealtimeViewModel(ctx.read<GpsService>()),
+        Provider(
+          create: (ctx) => MeasurementRepository(ctx.read<DatabaseService>()),
         ),
-        ChangeNotifierProvider(create: (_) => MeasurementViewModel()),
-        ChangeNotifierProvider(create: (_) => RecordsViewModel()),
+        ChangeNotifierProvider(create: (_) => VehicleSelectionViewModel()),
+        ChangeNotifierProvider(
+          create: (ctx) => RealtimeViewModel(
+            ctx.read<GpsService>(),
+            ctx.read<VehicleSelectionViewModel>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => MeasurementViewModel(
+            ctx.read<GpsService>(),
+            ctx.read<MeasurementRepository>(),
+            ctx.read<VehicleSelectionViewModel>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => RecordsViewModel(
+            ctx.read<MeasurementRepository>(),
+            ctx.read<NavigationViewModel>(),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'HorsepowerTracker',

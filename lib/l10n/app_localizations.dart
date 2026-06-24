@@ -379,7 +379,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectVehicle.
   ///
   /// In ja, this message translates to:
-  /// **'SELECT VEHICLE'**
+  /// **'車両選択'**
   String get selectVehicle;
 
   /// No description provided for @selectVehicleHint.
@@ -391,26 +391,32 @@ abstract class AppLocalizations {
   /// No description provided for @labelTemperature.
   ///
   /// In ja, this message translates to:
-  /// **'TEMPERATURE'**
+  /// **'外気温度'**
   String get labelTemperature;
 
   /// No description provided for @labelPressure.
   ///
   /// In ja, this message translates to:
-  /// **'PRESSURE'**
+  /// **'気圧'**
   String get labelPressure;
 
   /// No description provided for @gpsPrecision.
   ///
   /// In ja, this message translates to:
-  /// **'GPS PRECISION'**
+  /// **'GPS 精度'**
   String get gpsPrecision;
 
-  /// No description provided for @gpsLock10Hz.
+  /// No description provided for @gpsUpdateRate.
   ///
   /// In ja, this message translates to:
-  /// **'LOCK (10Hz)'**
-  String get gpsLock10Hz;
+  /// **'GPS 更新頻度'**
+  String get gpsUpdateRate;
+
+  /// No description provided for @gpsNoSignal.
+  ///
+  /// In ja, this message translates to:
+  /// **'NO SIGNAL'**
+  String get gpsNoSignal;
 
   /// No description provided for @startMeasurement.
   ///
@@ -580,6 +586,18 @@ abstract class AppLocalizations {
   /// **'駆動方式'**
   String get vehicleDetailDrivetrain;
 
+  /// No description provided for @vehicleDetailWeight.
+  ///
+  /// In ja, this message translates to:
+  /// **'車両重量'**
+  String get vehicleDetailWeight;
+
+  /// No description provided for @noData.
+  ///
+  /// In ja, this message translates to:
+  /// **'データなし'**
+  String get noData;
+
   /// No description provided for @vehicleNoteHint.
   ///
   /// In ja, this message translates to:
@@ -589,7 +607,7 @@ abstract class AppLocalizations {
   /// No description provided for @measurementConditions.
   ///
   /// In ja, this message translates to:
-  /// **'計測環境 & コンディション'**
+  /// **'計測環境'**
   String get measurementConditions;
 
   /// No description provided for @condRoadCondition.
@@ -634,11 +652,23 @@ abstract class AppLocalizations {
   /// **'この計測に関するメモを残す...'**
   String get measurementMemoHint;
 
-  /// No description provided for @exportData.
+  /// No description provided for @resetLossCoefficient.
   ///
   /// In ja, this message translates to:
-  /// **'データをエクスポート'**
-  String get exportData;
+  /// **'係数を1にリセット'**
+  String get resetLossCoefficient;
+
+  /// No description provided for @shareImage.
+  ///
+  /// In ja, this message translates to:
+  /// **'画像をシェア'**
+  String get shareImage;
+
+  /// No description provided for @tweetResult.
+  ///
+  /// In ja, this message translates to:
+  /// **'ツイートする'**
+  String get tweetResult;
 
   /// No description provided for @complete.
   ///

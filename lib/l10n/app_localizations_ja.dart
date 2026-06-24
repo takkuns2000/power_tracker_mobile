@@ -150,22 +150,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get measurementPrepSubtitle => '走行前の環境設定と車両確認を行ってください';
 
   @override
-  String get selectVehicle => 'SELECT VEHICLE';
+  String get selectVehicle => '車両選択';
 
   @override
   String get selectVehicleHint => '車両を選択';
 
   @override
-  String get labelTemperature => 'TEMPERATURE';
+  String get labelTemperature => '外気温度';
 
   @override
-  String get labelPressure => 'PRESSURE';
+  String get labelPressure => '気圧';
 
   @override
-  String get gpsPrecision => 'GPS PRECISION';
+  String get gpsPrecision => 'GPS 精度';
 
   @override
-  String get gpsLock10Hz => 'LOCK (10Hz)';
+  String get gpsUpdateRate => 'GPS 更新頻度';
+
+  @override
+  String get gpsNoSignal => 'NO SIGNAL';
 
   @override
   String get startMeasurement => '計測開始';
@@ -252,10 +255,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get vehicleDetailDrivetrain => '駆動方式';
 
   @override
+  String get vehicleDetailWeight => '車両重量';
+
+  @override
+  String get noData => 'データなし';
+
+  @override
   String get vehicleNoteHint => '車両に関する特記事項を入力...';
 
   @override
-  String get measurementConditions => '計測環境 & コンディション';
+  String get measurementConditions => '計測環境';
 
   @override
   String get condRoadCondition => '路面状況';
@@ -279,7 +288,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get measurementMemoHint => 'この計測に関するメモを残す...';
 
   @override
-  String get exportData => 'データをエクスポート';
+  String get resetLossCoefficient => '係数を1にリセット';
+
+  @override
+  String get shareImage => '画像をシェア';
+
+  @override
+  String get tweetResult => 'ツイートする';
 
   @override
   String get complete => '完了';

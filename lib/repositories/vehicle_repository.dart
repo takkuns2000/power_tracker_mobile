@@ -125,10 +125,8 @@ class VehicleRepository {
           )
         : null;
 
-    final drivetrainStr = row['drivetrain'] as String?;
-    final drivetrain = drivetrainStr != null
-        ? Drivetrain.values.where((d) => d.name == drivetrainStr).firstOrNull
-        : null;
+    final drivetrainIndex = row['drivetrain'] as int? ?? 0;
+    final drivetrain = Drivetrain.values[drivetrainIndex];
 
     final gearRatios = gearRows
         .map((g) => GearRatio(
@@ -160,7 +158,7 @@ class VehicleRepository {
         'model_code': v.modelCode,
         'weight_kg': v.weightKg,
         'memo': v.memo,
-        'drivetrain': v.drivetrain?.name,
+        'drivetrain': v.drivetrain.index,
         'displacement_cc': v.displacementCc,
         'tire_width_mm': v.tireSize?.widthMm,
         'tire_aspect_ratio': v.tireSize?.aspectRatio,

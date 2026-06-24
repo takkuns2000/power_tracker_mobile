@@ -98,14 +98,17 @@ class GaugeSegmentRow extends StatelessWidget {
     required this.filledCount,
     this.totalCount = 10,
     this.activeIndex,
+    this.color,
   });
 
   final int filledCount;
   final int totalCount;
   final int? activeIndex;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final fillColor = color ?? AppColors.primary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(totalCount, (i) {
@@ -114,7 +117,7 @@ class GaugeSegmentRow extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: _GaugeSegment(
-            color: isFilled ? AppColors.primary : AppColors.surface,
+            color: isFilled ? fillColor : AppColors.surface,
             opacity: isActive ? 1.0 : isFilled ? 0.8 : 0.25,
           ),
         );

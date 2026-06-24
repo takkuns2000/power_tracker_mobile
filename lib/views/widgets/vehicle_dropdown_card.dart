@@ -32,7 +32,7 @@ class VehicleDropdownCard extends StatelessWidget {
           Text(
             l10n.selectVehicle,
             style: AppTextStyles.labelCaps(context)
-                .copyWith(color: AppColors.primary, fontSize: 10),
+                .copyWith(color: AppColors.primary, fontSize: 15),
           ),
           const SizedBox(height: 4),
           DropdownButtonFormField<Vehicle>(
@@ -56,7 +56,7 @@ class VehicleDropdownCard extends StatelessWidget {
               filled: false,
             ),
             dropdownColor: AppColors.surfaceContainer,
-            style: AppTextStyles.statsMd(context).copyWith(fontSize: 15),
+            style: AppTextStyles.statsMd(context).copyWith(fontSize: 18),
             items: vehicles
                 .map(
                   (v) => DropdownMenuItem<Vehicle>(

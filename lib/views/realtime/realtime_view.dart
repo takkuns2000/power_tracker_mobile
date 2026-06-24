@@ -7,7 +7,6 @@ import '../../app_theme.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/gps_viewmodel.dart';
 import '../../viewmodels/realtime_viewmodel.dart';
-import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/vehicle_dropdown_card.dart';
 
@@ -66,21 +65,7 @@ class RealtimeView extends StatelessWidget {
                   VehicleDropdownCard(
                     vehicles: garage.vehicles,
                     selectedId: vm.selectedVehicleId,
-                    onChanged: (vehicle) {
-                      final l10n = AppLocalizations.of(context)!;
-                      vm.selectVehicle(vehicle);
-                      if (vm.vehicleError != null) {
-                        final error = vm.vehicleError!;
-                        vm.clearVehicleError();
-                        showConfirmDialog(
-                          context: context,
-                          icon: Icons.error_outline,
-                          title: 'エラー',
-                          content: Text(error),
-                          okLabel: l10n.close,
-                        );
-                      }
-                    },
+                    onChanged: vm.selectVehicle,
                   ),
                 ],
               ),
@@ -141,7 +126,7 @@ class _RealtimeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     const Icon(Icons.speed,
                         color: AppColors.primary, size: 24),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Text(
                       l10n.navLive,
                       style: GoogleFonts.sora(

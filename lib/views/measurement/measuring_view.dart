@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
+import '../../viewmodels/garage_viewmodel.dart';
+import '../widgets/pro_lock_wrapper.dart';
 import 'measurement_result_view.dart';
 import '../widgets/glass_card.dart';
 
@@ -14,6 +16,31 @@ class MeasuringView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MeasurementViewModel>();
+    final isPro = context.watch<GarageViewModel>().isPro;
+    final l10n = AppLocalizations.of(context)!;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (vm.saveError != null) {
+        final error = vm.saveError!;
+        vm.clearSaveError();
+        showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.inputError,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(error),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        );
+      }
+    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -23,26 +50,41 @@ class MeasuringView extends StatelessWidget {
         children: [
           _SpeedStreaks(),
           SafeArea(
-            child: SingleChildScrollView(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _StatusCard(startTime: vm.startTime),
                   const SizedBox(height: 16),
-                  _HpCard(),
+                  Expanded(
+                    child: _HpCard(currentPs: vm.currentPs, maxPs: vm.maxPs),
+                  ),
                   const SizedBox(height: 16),
-                  _TorqueCard(),
+                  Expanded(
+                    child: ProLockWrapper(
+                      isPro: isPro,
+                      child: _TorqueCard(),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           _StopButton(
-            onTap: () {
-              context.read<MeasurementViewModel>().stopMeasurement();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (_) => const MeasurementResultView()),
-              );
+            onTap: () async {
+              final vm = context.read<MeasurementViewModel>();
+              await vm.stopMeasurement();
+              if (!context.mounted) return;
+              if (vm.savedMeasurement != null) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => MeasurementResultView(
+                      viewModel: vm.createResultViewModel(),
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -73,29 +115,31 @@ class _MeasuringAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  l10n.measuring,
-                  style: GoogleFonts.sora(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    letterSpacing: 3,
-                    color: AppColors.primary,
-                  ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Icon(Icons.arrow_back_ios,
+                          color: AppColors.primary, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.timer,
+                        color: AppColors.primary, size: 24),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.measuring,
+                      style: GoogleFonts.sora(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -181,7 +225,6 @@ class _StatusCard extends StatelessWidget {
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(fontSize: 10)),
               const SizedBox(height: 4),
-              // TODO: 実装時は ViewModel の Stream<Duration> に置き換える
               StreamBuilder<int>(
                 stream: Stream.periodic(
                   const Duration(milliseconds: 100),
@@ -216,44 +259,42 @@ class _StatusCard extends StatelessWidget {
 }
 
 class _HpCard extends StatelessWidget {
+  const _HpCard({required this.currentPs, required this.maxPs});
+  final double? currentPs;
+  final double maxPs;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final displayPs = currentPs != null ? currentPs!.toStringAsFixed(1) : '--';
+    final peakLabel = maxPs > 0
+        ? 'PEAK ${maxPs.toStringAsFixed(1)} ${l10n.unitPs}'
+        : l10n.peakPowerDefault;
+
     return GlassCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  AppColors.primary.withValues(alpha: 0.5),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(l10n.estimatedPower,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(color: AppColors.onSurfaceVariant)),
-              Text(l10n.peakPowerDefault,
+              Text(peakLabel,
                   style: AppTextStyles.statsMd(context)
                       .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '--',
+                displayPs,
                 style: GoogleFonts.sora(
                   fontSize: 72,
                   fontWeight: FontWeight.w800,
@@ -271,8 +312,6 @@ class _HpCard extends StatelessWidget {
                   )),
             ],
           ),
-          const SizedBox(height: 16),
-          _MeasurementGauge(fillRatio: 0.4),
         ],
       ),
     );
@@ -284,52 +323,23 @@ class _TorqueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return GlassCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  AppColors.primary.withValues(alpha: 0.5),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Stack(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(l10n.estimatedTorque,
-                      style: AppTextStyles.labelCaps(context)
-                          .copyWith(color: AppColors.onSurfaceVariant)),
-                  Text(l10n.peakTorqueDefault,
-                      style: AppTextStyles.statsMd(context)
-                          .copyWith(color: AppColors.primary, fontSize: 14)),
-                ],
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Row(
-                  children: [
-                    const Icon(Icons.workspace_premium,
-                        color: AppColors.primary, size: 14),
-                    const SizedBox(width: 4),
-                    Text(l10n.proFeature,
-                        style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: AppColors.primary, fontSize: 10)),
-                  ],
-                ),
-              ),
+              Text(l10n.estimatedTorque,
+                  style: AppTextStyles.labelCaps(context)
+                      .copyWith(color: AppColors.onSurfaceVariant)),
+              Text(l10n.peakTorqueDefault,
+                  style: AppTextStyles.statsMd(context)
+                      .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -353,58 +363,8 @@ class _TorqueCard extends StatelessWidget {
                   )),
             ],
           ),
-          const SizedBox(height: 16),
-          _MeasurementGauge(fillRatio: 0.25),
         ],
       ),
-    );
-  }
-}
-
-class _MeasurementGauge extends StatelessWidget {
-  const _MeasurementGauge({required this.fillRatio});
-  final double fillRatio;
-
-  @override
-  Widget build(BuildContext context) {
-    const totalSegments = 30;
-    final filledCount = (totalSegments * fillRatio).round();
-    final dangerThreshold = (totalSegments * 0.85).round();
-
-    return Row(
-      children: List.generate(totalSegments, (i) {
-        Color color;
-        if (i < filledCount) {
-          color = i >= dangerThreshold
-              ? const Color(0xFFFF535B)
-              : AppColors.primary;
-        } else {
-          color = AppColors.surface;
-        }
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 1),
-            child: Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.skewX(-0.26),
-              child: Container(
-                height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  boxShadow: i < filledCount
-                      ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.5),
-                            blurRadius: 4,
-                          )
-                        ]
-                      : null,
-                ),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }
@@ -435,46 +395,38 @@ class _StopButton extends StatelessWidget {
         ),
         child: GestureDetector(
           onTap: onTap,
-          child: ClipPath(
-            clipper: _SlantClipper(),
-            child: Container(
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.9),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 30,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.stop_circle_outlined,
-                          color: Colors.white, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.stopMeasurement,
-                        style: GoogleFonts.sora(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.white,
-                        ),
+          child: Container(
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 30,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.stop_circle_outlined,
+                        color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.stopMeasurement,
+                      style: GoogleFonts.sora(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
-                  Text(
-                    l10n.viewResults,
-                    style: AppTextStyles.labelCaps(context)
-                        .copyWith(color: Colors.white70, fontSize: 10),
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -483,19 +435,3 @@ class _StopButton extends StatelessWidget {
   }
 }
 
-class _SlantClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    final offset = size.width * 0.05;
-    path.moveTo(offset, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width - offset, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
