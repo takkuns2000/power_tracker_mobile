@@ -61,8 +61,20 @@ fvm flutter pub get
 # 言語ファイルの生成（初回および ARB 変更後に必要）
 fvm flutter gen-l10n
 
+# モデルコードの生成（初回およびモデル変更後に必要）
+fvm dart run build_runner build --delete-conflicting-outputs
+
 # アプリの起動
 fvm flutter run
+```
+
+## モデルコード生成
+
+`freezed` および `json_serializable` を使ったモデルクラスの生成には `build_runner` を使用します。モデルを追加・変更した後は以下を実行してください。
+
+```bash
+# 差分ビルド（通常はこちら）
+fvm dart run build_runner build --delete-conflicting-outputs
 ```
 
 ## 言語ファイルの管理

@@ -1,49 +1,115 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
+import '../../models/measurement.dart';
+import '../../repositories/measurement_repository.dart';
+import '../../viewmodels/garage_viewmodel.dart';
+import '../../viewmodels/measurement_result_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/pro_lock_wrapper.dart';
 
 class MeasurementResultView extends StatelessWidget {
-  const MeasurementResultView({super.key});
+  const MeasurementResultView({super.key, required this.measurement});
+
+  final Measurement measurement;
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (ctx) => MeasurementResultViewModel(
+        ctx.read<MeasurementRepository>(),
+        measurement,
+      ),
+      child: const _MeasurementResultBody(),
+    );
+  }
+}
+
+class _MeasurementResultBody extends StatelessWidget {
+  const _MeasurementResultBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<MeasurementResultViewModel>();
+    final isPro = context.watch<GarageViewModel>().isPro;
+    final m = vm.measurement;
+    final l10n = AppLocalizations.of(context)!;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      final String? err = vm.saveError ?? vm.shareError;
+      if (err != null) {
+        if (vm.saveError != null) vm.clearSaveError();
+        if (vm.shareError != null) vm.clearShareError();
+        showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.inputError,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(err),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
-      appBar: _ResultAppBar(),
+      appBar: _ResultAppBar(
+        onClose: () {
+          context.read<MeasurementViewModel>().reset();
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _DateHeader(),
+              _DateHeader(measuredAt: m.measuredAt),
               const SizedBox(height: 8),
-              _PeakHpSection(),
+              _PeakHpSection(maxHp: m.maxHp),
               const SizedBox(height: 24),
-              _ChartCard(),
+              _ChartCard(hpValues: vm.hpValues),
               const SizedBox(height: 16),
-              _EnvInputRow(),
+              _ProBento(isPro: isPro),
               const SizedBox(height: 16),
-              _StatsBento(),
-              const SizedBox(height: 16),
-              _VehicleCard(),
-              const SizedBox(height: 16),
-              _ConditionsCard(),
-              const SizedBox(height: 16),
-              _MemoCard(),
-              const SizedBox(height: 24),
-              _ActionButtons(
-                onComplete: () {
-                  context.read<MeasurementViewModel>().reset();
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
+              _VehicleCard(
+                measurement: m,
+                isExpanded: vm.isVehicleExpanded,
+                onToggle: () => context
+                    .read<MeasurementResultViewModel>()
+                    .toggleVehicleExpanded(),
               ),
+              const SizedBox(height: 16),
+              _ConditionsCard(
+                measurement: m,
+                isPro: isPro,
+                onResetLoss: () => context
+                    .read<MeasurementResultViewModel>()
+                    .saveDriveLossCoefficient(0.0),
+              ),
+              const SizedBox(height: 16),
+              _MemoCard(
+                initialMemo: m.memo,
+                onSave: (memo) =>
+                    context.read<MeasurementResultViewModel>().saveMemo(memo),
+              ),
+              const SizedBox(height: 24),
+              const _ShareRow(),
             ],
           ),
         ),
@@ -53,6 +119,9 @@ class MeasurementResultView extends StatelessWidget {
 }
 
 class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _ResultAppBar({required this.onClose});
+  final VoidCallback onClose;
+
   @override
   Size get preferredSize => const Size.fromHeight(64);
 
@@ -61,7 +130,7 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
     final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           height: 64 + MediaQuery.of(context).padding.top,
           padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
@@ -83,13 +152,24 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     const Icon(Icons.analytics_outlined,
                         color: AppColors.primary, size: 24),
-                    const SizedBox(width: 8),
-                    Text(l10n.measurementResult,
-                        style: AppTextStyles.headlineLg(context)),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.measurementResult,
+                      style: GoogleFonts.sora(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
-                const Icon(Icons.more_vert,
-                    color: AppColors.onSurfaceVariant),
+                IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close,
+                      color: AppColors.onSurfaceVariant),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ],
             ),
           ),
@@ -100,9 +180,16 @@ class _ResultAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _DateHeader extends StatelessWidget {
+  const _DateHeader({required this.measuredAt});
+  final DateTime measuredAt;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final date =
+        '${measuredAt.year}.${measuredAt.month.toString().padLeft(2, '0')}.${measuredAt.day.toString().padLeft(2, '0')}';
+    final time =
+        '${measuredAt.hour.toString().padLeft(2, '0')}:${measuredAt.minute.toString().padLeft(2, '0')}';
     return Column(
       children: [
         Text(l10n.measurementDateTime,
@@ -113,12 +200,12 @@ class _DateHeader extends StatelessWidget {
           text: TextSpan(
             children: [
               TextSpan(
-                text: '2023.10.24 ',
+                text: '$date ',
                 style: AppTextStyles.bodyMd(context)
                     .copyWith(fontWeight: FontWeight.w600),
               ),
               TextSpan(
-                text: '14:30',
+                text: time,
                 style: AppTextStyles.bodyMd(context)
                     .copyWith(color: AppColors.onSurfaceVariant),
               ),
@@ -131,6 +218,9 @@ class _DateHeader extends StatelessWidget {
 }
 
 class _PeakHpSection extends StatelessWidget {
+  const _PeakHpSection({required this.maxHp});
+  final double maxHp;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -144,7 +234,7 @@ class _PeakHpSection extends StatelessWidget {
           text: TextSpan(
             children: [
               TextSpan(
-                text: '582',
+                text: maxHp.toStringAsFixed(1),
                 style: GoogleFonts.sora(
                   fontSize: 64,
                   fontWeight: FontWeight.w800,
@@ -153,13 +243,11 @@ class _PeakHpSection extends StatelessWidget {
                   letterSpacing: -2.5,
                   shadows: [
                     Shadow(
-                      color: AppColors.primary.withValues(alpha: 0.6),
-                      blurRadius: 15,
-                    ),
+                        color: AppColors.primary.withValues(alpha: 0.6),
+                        blurRadius: 15),
                     Shadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 30,
-                    ),
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 30),
                   ],
                 ),
               ),
@@ -180,6 +268,9 @@ class _PeakHpSection extends StatelessWidget {
 }
 
 class _ChartCard extends StatelessWidget {
+  const _ChartCard({required this.hpValues});
+  final List<double> hpValues;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -192,37 +283,17 @@ class _ChartCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(l10n.chartPowerHp,
-                          style: AppTextStyles.labelCaps(context)),
-                    ],
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: AppColors.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(l10n.chartRpmX1000,
-                          style: AppTextStyles.labelCaps(context)),
-                    ],
-                  ),
+                  const SizedBox(width: 8),
+                  Text(l10n.chartPowerHp,
+                      style: AppTextStyles.labelCaps(context)),
                 ],
               ),
               Container(
@@ -232,8 +303,7 @@ class _ChartCard extends StatelessWidget {
                   color: AppColors.surfaceContainer,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                  ),
+                      color: AppColors.primary.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
@@ -252,15 +322,20 @@ class _ChartCard extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             height: 160,
-            child: CustomPaint(
-              painter: _HpChartPainter(),
-              child: const SizedBox.expand(),
-            ),
+            child: hpValues.isEmpty
+                ? Center(
+                    child: Text(l10n.noData,
+                        style: AppTextStyles.labelCaps(context)
+                            .copyWith(color: AppColors.onSurfaceVariant)),
+                  )
+                : CustomPaint(
+                    painter: _HpChartPainter(hpValues: hpValues),
+                    child: const SizedBox.expand(),
+                  ),
           ),
           const SizedBox(height: 8),
           Text(l10n.chartTimeElapsed,
-              style: AppTextStyles.labelCaps(context)
-                  .copyWith(fontSize: 10)),
+              style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
         ],
       ),
     );
@@ -268,390 +343,214 @@ class _ChartCard extends StatelessWidget {
 }
 
 class _HpChartPainter extends CustomPainter {
+  const _HpChartPainter({required this.hpValues});
+  final List<double> hpValues;
+
   @override
   void paint(Canvas canvas, Size size) {
+    if (hpValues.isEmpty) return;
+
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.05)
       ..strokeWidth = 1;
-    for (final y in [size.height * 0.17, size.height * 0.5, size.height * 0.83]) {
+    for (final y in [
+      size.height * 0.17,
+      size.height * 0.5,
+      size.height * 0.83
+    ]) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final rpmPaint = Paint()
-      ..color = AppColors.secondary.withValues(alpha: 0.4)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    final rpmPath = Path();
-    rpmPath.moveTo(0, size.height * 0.93);
-    rpmPath.cubicTo(
-      size.width * 0.2, size.height * 0.8,
-      size.width * 0.4, size.height * 0.6,
-      size.width * 0.6, size.height * 0.47,
-    );
-    rpmPath.cubicTo(
-      size.width * 0.7, size.height * 0.43,
-      size.width * 0.9, size.height * 0.43,
-      size.width, size.height * 0.5,
-    );
-    canvas.drawPath(rpmPath, rpmPaint);
+    final maxHp = hpValues.reduce((a, b) => a > b ? a : b);
+    if (maxHp <= 0) return;
 
     final hpPaint = Paint()
       ..color = AppColors.primary
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    final hpPath = Path();
-    hpPath.moveTo(0, size.height * 0.97);
-    hpPath.cubicTo(
-      size.width * 0.2, size.height * 0.83,
-      size.width * 0.4, size.height * 0.53,
-      size.width * 0.6, size.height * 0.27,
-    );
-    hpPath.cubicTo(
-      size.width * 0.7, size.height * 0.13,
-      size.width * 0.85, size.height * 0.13,
-      size.width, size.height * 0.2,
-    );
-    canvas.drawPath(hpPath, hpPaint);
 
+    final path = Path();
+    for (var i = 0; i < hpValues.length; i++) {
+      final x = size.width * i / (hpValues.length - 1);
+      final y = size.height * (1 - hpValues[i] / maxHp);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, hpPaint);
+
+    final peakIndex = hpValues.indexOf(maxHp);
+    final peakX = size.width * peakIndex / (hpValues.length - 1);
     canvas.drawCircle(
-      Offset(size.width * 0.8, size.height * 0.13),
-      5,
-      Paint()..color = AppColors.primary,
-    );
+        Offset(peakX, 0), 5, Paint()..color = AppColors.primary);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(_HpChartPainter old) => hpValues != old.hpValues;
 }
 
-class _EnvInputRow extends StatelessWidget {
+class _ProBento extends StatelessWidget {
+  const _ProBento({required this.isPro});
+  final bool isPro;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Expanded(child: _EnvInput(label: l10n.envInputTemp, unit: '°C')),
-        const SizedBox(width: 16),
-        Expanded(child: _EnvInput(label: l10n.envInputPressure, unit: 'hPa')),
-      ],
-    );
-  }
-}
-
-class _EnvInput extends StatelessWidget {
-  const _EnvInput({required this.label, required this.unit});
-  final String label;
-  final String unit;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: AppTextStyles.labelCaps(context)
-                  .copyWith(fontSize: 10)),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextFormField(
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  style: AppTextStyles.statsMd(context)
-                      .copyWith(fontSize: 24),
-                  decoration: InputDecoration(
-                    hintText: '--',
-                    hintStyle: AppTextStyles.statsMd(context)
-                        .copyWith(fontSize: 24, color: AppColors.onSurfaceVariant),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+        Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 110),
+            child: ProLockWrapper(
+              isPro: isPro,
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.statMaxTorque,
+                        style: AppTextStyles.labelCaps(context)
+                            .copyWith(fontSize: 10)),
+                    const SizedBox(height: 12),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '--',
+                            style: GoogleFonts.sora(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' NM',
+                            style: AppTextStyles.labelCaps(context)
+                                .copyWith(color: AppColors.secondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(unit,
-                  style: AppTextStyles.labelCaps(context)
-                      .copyWith(color: AppColors.onSurface.withValues(alpha: 0.5))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsBento extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
-      children: [
-        _StatCell(
-            label: l10n.stat0To100,
-            value: '3.42',
-            unit: l10n.unitSeconds,
-            valueColor: AppColors.primary),
-        _StatCell(label: l10n.statHumidity, value: '42', unit: '%'),
-        _ProStatCell(
-            label: l10n.statMaxTorque,
-            value: '720',
-            unit: 'NM',
-            valueColor: AppColors.secondary),
-        _ProLogCell(),
-      ],
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.label,
-    required this.value,
-    required this.unit,
-    this.valueColor,
-  });
-  final String label;
-  final String value;
-  final String unit;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: value,
-                  style: GoogleFonts.sora(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: valueColor ?? AppColors.onSurface,
-                  ),
-                ),
-                TextSpan(
-                  text: ' $unit',
-                  style: AppTextStyles.labelCaps(context)
-                      .copyWith(color: valueColor ?? AppColors.onSurface),
-                ),
-              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProStatCell extends StatelessWidget {
-  const _ProStatCell({
-    required this.label,
-    required this.value,
-    required this.unit,
-    this.valueColor,
-  });
-  final String label;
-  final String value;
-  final String unit;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Stack(
-        children: [
-          GlassCard(
-            borderRadius: 0,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label,
-                    style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: value,
-                        style: GoogleFonts.sora(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: valueColor ?? AppColors.onSurface,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' $unit',
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 110),
+            child: ProLockWrapper(
+              isPro: isPro,
+              child: GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.analytics_outlined,
+                        color: AppColors.primary, size: 28),
+                    const SizedBox(height: 4),
+                    Text(l10n.showDetailLog,
                         style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: valueColor ?? AppColors.onSurface),
-                      ),
-                    ],
-                  ),
+                            .copyWith(color: AppColors.primary, fontSize: 10)),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              color: AppColors.primary,
-              child: Text(l10n.pro,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  )),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProLogCell extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Stack(
-        children: [
-          GlassCard(
-            borderRadius: 0,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.analytics_outlined,
-                    color: AppColors.primary, size: 28),
-                const SizedBox(height: 4),
-                Text(l10n.showDetailLog,
-                    style: AppTextStyles.labelCaps(context)
-                        .copyWith(color: AppColors.primary, fontSize: 10)),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              color: AppColors.primary,
-              child: Text(l10n.pro,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  )),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 class _VehicleCard extends StatelessWidget {
+  const _VehicleCard({
+    required this.measurement,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+  final Measurement measurement;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final v = measurement.vehicleSnapshot;
     return GlassCard(
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.measuredVehicle,
-                        style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: AppColors.primary)),
-                    const SizedBox(height: 4),
-                    Text('PORSCHE 911 GT3',
-                        style: AppTextStyles.headlineLg(context)),
-                    const SizedBox(height: 2),
-                    Text('車両重量: 1,435 kg',
-                        style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: AppColors.onSurfaceVariant)),
-                  ],
-                ),
-                const Icon(Icons.expand_more, color: AppColors.primary),
-              ],
+          GestureDetector(
+            onTap: onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.measuredVehicle,
+                          style: AppTextStyles.labelCaps(context)
+                              .copyWith(color: AppColors.primary)),
+                      const SizedBox(height: 4),
+                      Text(measurement.vehicleName,
+                          style: AppTextStyles.headlineLg(context)),
+                      const SizedBox(height: 2),
+                      Text(
+                          '${l10n.vehicleDetailWeight}: ${measurement.vehicleWeightKg.toStringAsFixed(0)} kg',
+                          style: AppTextStyles.labelCaps(context)
+                              .copyWith(color: AppColors.onSurfaceVariant)),
+                    ],
+                  ),
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
             ),
           ),
-          Divider(
-              height: 1, color: AppColors.primary.withValues(alpha: 0.1)),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
+          if (isExpanded) ...[
+            Divider(
+                height: 1, color: AppColors.primary.withValues(alpha: 0.1)),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Wrap(
+                spacing: 0,
+                runSpacing: 16,
+                children: [
+                  if (v.modelCode != null)
+                    SizedBox(
+                      width: 160,
+                      child: _VehicleDetail(
+                          label: l10n.labelModelCode,
+                          value: v.modelCode!),
+                    ),
+                  if (v.displacementCc != null)
+                    SizedBox(
+                      width: 160,
                       child: _VehicleDetail(
                           label: l10n.vehicleDetailDisplacement,
-                          value: '3,996 cc'),
+                          value: '${v.displacementCc} cc'),
                     ),
-                    Expanded(
-                      child: _VehicleDetail(
-                          label: l10n.vehicleDetailDrivetrain, value: 'RR'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  maxLines: 2,
-                  style: AppTextStyles.bodyMd(context),
-                  decoration: InputDecoration(
-                    hintText: l10n.vehicleNoteHint,
-                    contentPadding: const EdgeInsets.all(12),
-                    filled: true,
-                    fillColor: AppColors.surfaceContainer,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: AppColors.primary),
-                    ),
+                  SizedBox(
+                    width: 160,
+                    child: _VehicleDetail(
+                        label: l10n.vehicleDetailDrivetrain,
+                        value: v.drivetrain.label),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -678,9 +577,23 @@ class _VehicleDetail extends StatelessWidget {
 }
 
 class _ConditionsCard extends StatelessWidget {
+  const _ConditionsCard({
+    required this.measurement,
+    required this.isPro,
+    required this.onResetLoss,
+  });
+  final Measurement measurement;
+  final bool isPro;
+  final VoidCallback onResetLoss;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final lossPercent =
+        (measurement.driveLossCoefficient * 100).toStringAsFixed(0);
+    final temp = measurement.temperatureCelsius;
+    final pressure = measurement.pressureHpa;
+
     return GlassCard(
       leftBorderColor: AppColors.primary,
       child: Column(
@@ -688,7 +601,7 @@ class _ConditionsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.info_outline,
+              const Icon(Icons.thermostat_outlined,
                   color: AppColors.primary, size: 16),
               const SizedBox(width: 8),
               Text(l10n.measurementConditions,
@@ -701,13 +614,51 @@ class _ConditionsCard extends StatelessWidget {
             spacing: 0,
             runSpacing: 16,
             children: [
-              _CondDetail(label: l10n.condRoadCondition, value: 'アスファルト (ドライ)'),
-              _CondDetail(label: l10n.condAltitude, value: '142m (海抜)'),
-              _CondDetail(label: l10n.condDriveLoss, value: 'SAE J1349'),
-              _CondDetail(label: l10n.condTireSize, value: 'F: 32 PSI / R: 30 PSI'),
-              _CondDetail(label: l10n.condMeasurementGear, value: '4速プル'),
+              if (temp != null)
+                SizedBox(
+                  width: 160,
+                  child: _CondDetail(
+                      label: l10n.labelTemperature,
+                      value: '${temp.toStringAsFixed(1)} °C'),
+                ),
+              if (pressure != null)
+                SizedBox(
+                  width: 160,
+                  child: _CondDetail(
+                      label: l10n.labelPressure,
+                      value: '${pressure.toStringAsFixed(1)} hPa'),
+                ),
+              SizedBox(
+                width: 160,
+                child: _CondDetail(
+                    label: l10n.condDriveLoss,
+                    value:
+                        '${measurement.vehicleSnapshot.drivetrain.label} ($lossPercent%)'),
+              ),
             ],
           ),
+          if (isPro) ...[
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: onResetLoss,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainer,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(l10n.resetLossCoefficient,
+                      style: AppTextStyles.labelCaps(context)
+                          .copyWith(color: AppColors.primary, fontSize: 10)),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -721,22 +672,23 @@ class _CondDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 160,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
-          const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.bodyMd(context)),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
+        const SizedBox(height: 4),
+        Text(value, style: AppTextStyles.bodyMd(context)),
+      ],
     );
   }
 }
 
 class _MemoCard extends StatelessWidget {
+  const _MemoCard({required this.initialMemo, required this.onSave});
+  final String? initialMemo;
+  final Future<void> Function(String?) onSave;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -750,13 +702,13 @@ class _MemoCard extends StatelessWidget {
                   color: AppColors.onSurfaceVariant, size: 16),
               const SizedBox(width: 8),
               Text(l10n.measurementMemo,
-                  style: AppTextStyles.labelCaps(context).copyWith(
-                    letterSpacing: 1.5,
-                  )),
+                  style: AppTextStyles.labelCaps(context)
+                      .copyWith(letterSpacing: 1.5)),
             ],
           ),
           const SizedBox(height: 12),
           TextFormField(
+            initialValue: initialMemo,
             maxLines: 3,
             style: AppTextStyles.bodyMd(context),
             decoration: InputDecoration(
@@ -774,6 +726,7 @@ class _MemoCard extends StatelessWidget {
                 borderSide: const BorderSide(color: AppColors.primary),
               ),
             ),
+            onFieldSubmitted: onSave,
           ),
         ],
       ),
@@ -781,60 +734,55 @@ class _MemoCard extends StatelessWidget {
   }
 }
 
-class _ActionButtons extends StatelessWidget {
-  const _ActionButtons({required this.onComplete});
-  final VoidCallback onComplete;
+class _ShareRow extends StatelessWidget {
+  const _ShareRow();
+
+  static Rect _originOf(BuildContext ctx) {
+    final box = ctx.findRenderObject() as RenderBox?;
+    return box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : Rect.fromLTWH(0, 0, 10, 10);
+  }
+
+  static ButtonStyle _buttonStyle() => OutlinedButton.styleFrom(
+        foregroundColor: AppColors.onSurface,
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        minimumSize: const Size.fromHeight(52),
+        textStyle: const TextStyle(letterSpacing: 1.2),
+      );
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
     return Row(
       children: [
         Expanded(
-          child: GestureDetector(
-            onTap: () {},
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.ios_share,
-                      color: AppColors.onSurface, size: 20),
-                  const SizedBox(width: 8),
-                  Text(l10n.exportData,
-                      style: AppTextStyles.labelCaps(context)),
-                ],
-              ),
+          child: Builder(
+            builder: (ctx) => OutlinedButton.icon(
+              onPressed: () {
+                ctx.read<MeasurementResultViewModel>().shareImage(_originOf(ctx));
+              },
+              icon: const Icon(Icons.image_outlined, size: 18),
+              label: Text(l10n.shareImage,
+                  style: AppTextStyles.labelCaps(context)),
+              style: _buttonStyle(),
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
-          child: GestureDetector(
-            onTap: onComplete,
-            child: ClipPath(
-              clipper: _SlantedClipper(),
-              child: Container(
-                height: 56,
-                color: AppColors.primary,
-                alignment: Alignment.center,
-                child: Text(
-                  l10n.complete,
-                  style: GoogleFonts.sora(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+          child: Builder(
+            builder: (ctx) => OutlinedButton.icon(
+              onPressed: () {
+                ctx.read<MeasurementResultViewModel>().tweetImage(_originOf(ctx));
+              },
+              icon: const Icon(Icons.alternate_email, size: 18),
+              label: Text(l10n.tweetResult,
+                  style: AppTextStyles.labelCaps(context)),
+              style: _buttonStyle(),
             ),
           ),
         ),
@@ -843,19 +791,3 @@ class _ActionButtons extends StatelessWidget {
   }
 }
 
-class _SlantedClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    final offset = size.width * 0.1;
-    path.moveTo(offset, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width - offset, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}

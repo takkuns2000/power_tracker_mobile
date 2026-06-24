@@ -7,7 +7,7 @@ part 'vehicle.freezed.dart';
 part 'vehicle.g.dart';
 
 @freezed
-class Vehicle with _$Vehicle {
+abstract class Vehicle with _$Vehicle {
   const Vehicle._();
 
   const factory Vehicle({
@@ -15,7 +15,7 @@ class Vehicle with _$Vehicle {
     required String name,
     String? modelCode,
     required double weightKg,
-    Drivetrain? drivetrain,
+    @Default(Drivetrain.fwd) Drivetrain drivetrain,
     int? displacementCc,
     String? memo,
     TireSize? tireSize,

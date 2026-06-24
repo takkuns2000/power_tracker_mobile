@@ -4,7 +4,7 @@ part 'gear_ratio.freezed.dart';
 part 'gear_ratio.g.dart';
 
 @freezed
-class GearRatio with _$GearRatio {
+abstract class GearRatio with _$GearRatio {
   const factory GearRatio({
     int? id,
     required int vehicleId,

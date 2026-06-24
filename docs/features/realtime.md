@@ -6,7 +6,7 @@ Spec: [basic_specification.md](../basic_specification.md) § 2-4
 
 | 画面 | ファイル |
 |------|---------|
-| リアルタイム | lib/views/realtime/realtime_screen.dart |
+| リアルタイム | lib/views/realtime/realtime_view.dart |
 
 ## ViewModel / Model
 
@@ -76,6 +76,13 @@ PE  = m × g × Δh / η   ← ke2 と同様、η でエンジン側に換算
 η の値は `lib/models/drivetrain.dart` の `driveEfficiency` getter で管理する。
 
 ## 実装メモ
+
+### リアルタイム PS 計算（実装済み）
+
+- `RealtimeViewModel` が `GpsService` のストリームを購読し、GPS 更新ごとに `PsCalculatorService` で瞬時 PS を算出
+- `VehicleSelectionViewModel` から選択車両（重量・駆動方式）を取得して計算に反映
+- GPS 更新頻度（Hz）と信号品質をセグメントゲージで可視化
+- 信号喪失（3秒タイムアウト）で `isGpsActive = false` → インジケータが赤に変化
 
 ### GPS権限フロー（実装済み）
 

@@ -6,6 +6,7 @@ import 'package:horsepower_tracker_mobile/models/vehicle.dart';
 import 'package:horsepower_tracker_mobile/services/gps_service.dart';
 import 'package:horsepower_tracker_mobile/services/ps_calculator.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/realtime_viewmodel.dart';
+import 'package:horsepower_tracker_mobile/viewmodels/vehicle_selection_viewmodel.dart';
 
 // ---------------------------------------------------------------------------
 // Fake GPS Service
@@ -280,11 +281,13 @@ void main() {
 
   group('RealtimeViewModel', () {
     late _FakeGpsService gps;
+    late VehicleSelectionViewModel vehicleSelection;
     late RealtimeViewModel vm;
 
     setUp(() {
       gps = _FakeGpsService();
-      vm = RealtimeViewModel(gps);
+      vehicleSelection = VehicleSelectionViewModel();
+      vm = RealtimeViewModel(gps, vehicleSelection);
     });
 
     tearDown(() {
@@ -369,20 +372,16 @@ void main() {
       expect(vm.selectedVehicleId, isNull);
     });
 
-    test('drivetrain 未設定の車両を選択すると vehicleError がセットされ ps は null', () {
+    test('車両を選択すると selectedVehicleId がセットされる', () {
       vm.selectVehicle(Vehicle(
         id: 1,
-        name: 'エラー車両',
+        name: 'テスト車両',
         weightKg: 1500,
+        drivetrain: Drivetrain.fwd,
         createdAt: DateTime(2024),
         updatedAt: DateTime(2024),
       ));
-      expect(vm.vehicleError, isNotNull);
-      expect(vm.selectedVehicleId, isNull);
-
-      // エラーをクリアできる
-      vm.clearVehicleError();
-      expect(vm.vehicleError, isNull);
+      expect(vm.selectedVehicleId, '1');
     });
 
     test('FWD 車両は RWD より低い PS を返す', () {

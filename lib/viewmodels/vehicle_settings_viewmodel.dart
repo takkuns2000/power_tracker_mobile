@@ -35,7 +35,7 @@ class VehicleSettingsViewModel extends ChangeNotifier {
           .firstOrNull;
       return TextEditingController(text: gear?.ratio.toString() ?? '');
     });
-    _drivetrain = vehicle?.drivetrain;
+    _drivetrain = vehicle?.drivetrain ?? Drivetrain.fwd;
   }
 
   final VehicleRepository _repository;
@@ -55,15 +55,15 @@ class VehicleSettingsViewModel extends ChangeNotifier {
   late final TextEditingController finalGearController;
   late final List<TextEditingController> gearControllers;
 
-  Drivetrain? _drivetrain;
-  Drivetrain? get drivetrain => _drivetrain;
+  Drivetrain _drivetrain = Drivetrain.fwd;
+  Drivetrain get drivetrain => _drivetrain;
 
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
   bool get isEditing => _editingVehicle != null;
 
-  void selectDrivetrain(Drivetrain? value) {
+  void selectDrivetrain(Drivetrain value) {
     _drivetrain = value;
     notifyListeners();
   }
@@ -80,10 +80,6 @@ class VehicleSettingsViewModel extends ChangeNotifier {
     final weight = double.tryParse(weightText);
     if (weight == null) {
       debugPrint('[VehicleSettingsViewModel] save aborted: invalid weight');
-      return false;
-    }
-    if (_drivetrain == null) {
-      debugPrint('[VehicleSettingsViewModel] save aborted: drivetrain not selected');
       return false;
     }
 

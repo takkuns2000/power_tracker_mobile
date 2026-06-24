@@ -2,86 +2,98 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../app_theme.dart';
+import '../../models/measurement.dart';
+import '../../viewmodels/records_viewmodel.dart';
+import '../measurement/measurement_result_view.dart';
 import '../widgets/glass_card.dart';
-
-const _mockRecords = [
-  {
-    'date': '2023.10.24 14:30',
-    'vehicle': 'PORSCHE 911 GT3',
-    'hp': 582,
-    'tags': ['Stage 2', '98 OCT'],
-    'trend': 12,
-    'month': null,
-  },
-  {
-    'date': '2023.10.22 09:15',
-    'vehicle': 'Supra MK4',
-    'hp': 415,
-    'tags': ['Stock Turbo'],
-    'trend': -4,
-    'month': null,
-  },
-  {
-    'date': null,
-    'vehicle': null,
-    'hp': null,
-    'tags': null,
-    'trend': null,
-    'month': 'September 2023',
-  },
-  {
-    'date': '2023.09.30 16:45',
-    'vehicle': 'Nissan GT-R R35',
-    'hp': 600,
-    'tags': ['Nismo Pack'],
-    'trend': 0,
-    'month': null,
-  },
-  {
-    'date': '2023.09.12 11:20',
-    'vehicle': 'PORSCHE 911 GT3',
-    'hp': 510,
-    'tags': ['Stage 1 Baseline'],
-    'trend': 8,
-    'month': null,
-  },
-];
 
 class RecordsView extends StatelessWidget {
   const RecordsView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<RecordsViewModel>();
+    final l10n = AppLocalizations.of(context)!;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (vm.loadError != null) {
+        final error = vm.loadError!;
+        vm.clearLoadError();
+        showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.inputError,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(error),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
-      appBar: _HistoryAppBar(),
+      appBar: _HistoryAppBar(onRefresh: vm.load),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SummarySection(),
-              const SizedBox(height: 24),
-              ..._mockRecords.map((item) {
-                if (item['month'] != null) {
-                  return _MonthSeparator(label: item['month'] as String);
-                }
-                return _RecordCard(item: item);
-              }),
-              const SizedBox(height: 16),
-              _EcuSyncSection(),
-            ],
-          ),
-        ),
+        child: vm.isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary))
+            : vm.records.isEmpty
+                ? _EmptyState()
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _SummarySection(records: vm.records),
+                        const SizedBox(height: 24),
+                        ..._buildRecordList(context, vm.records),
+                      ],
+                    ),
+                  ),
       ),
     );
+  }
+
+  List<Widget> _buildRecordList(
+      BuildContext context, List<Measurement> records) {
+    final widgets = <Widget>[];
+    String? lastMonth;
+
+    for (final record in records) {
+      final month =
+          '${record.measuredAt.year}.${record.measuredAt.month.toString().padLeft(2, '0')}';
+      if (month != lastMonth) {
+        widgets.add(_MonthSeparator(label: month));
+        lastMonth = month;
+      }
+      widgets.add(_RecordCard(
+        measurement: record,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MeasurementResultView(measurement: record),
+          ),
+        ),
+      ));
+    }
+    return widgets;
   }
 }
 
 class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _HistoryAppBar({required this.onRefresh});
+  final VoidCallback onRefresh;
+
   @override
   Size get preferredSize => const Size.fromHeight(64);
 
@@ -123,15 +135,18 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ],
                 ),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
+                GestureDetector(
+                  onTap: onRefresh,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.refresh,
+                        color: AppColors.onSurfaceVariant, size: 20),
                   ),
-                  child: const Icon(Icons.filter_list,
-                      color: AppColors.onSurfaceVariant, size: 20),
                 ),
               ],
             ),
@@ -143,9 +158,16 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _SummarySection extends StatelessWidget {
+  const _SummarySection({required this.records});
+  final List<Measurement> records;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final peakHp = records.isEmpty
+        ? 0.0
+        : records.map((r) => r.maxHp).reduce((a, b) => a > b ? a : b);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -160,7 +182,7 @@ class _SummarySection extends StatelessWidget {
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: '128 ',
+                    text: '${records.length} ',
                     style: GoogleFonts.sora(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
@@ -187,7 +209,7 @@ class _SummarySection extends StatelessWidget {
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: '742 ',
+                    text: '${peakHp.toStringAsFixed(1)} ',
                     style: GoogleFonts.sora(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
@@ -210,65 +232,73 @@ class _SummarySection extends StatelessWidget {
 }
 
 class _RecordCard extends StatelessWidget {
-  const _RecordCard({required this.item});
-  final Map<String, dynamic> item;
+  const _RecordCard({required this.measurement, required this.onTap});
+  final Measurement measurement;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final trend = item['trend'] as int? ?? 0;
-    final hp = item['hp'] as int? ?? 0;
-    final tags = item['tags'] as List<String>? ?? [];
+    final m = measurement;
+    final date =
+        '${m.measuredAt.year}.${m.measuredAt.month.toString().padLeft(2, '0')}.${m.measuredAt.day.toString().padLeft(2, '0')} '
+        '${m.measuredAt.hour.toString().padLeft(2, '0')}:${m.measuredAt.minute.toString().padLeft(2, '0')}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item['date'] as String? ?? '',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11,
-                      color: AppColors.secondary.withValues(alpha: 0.6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      date,
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        color: AppColors.secondary.withValues(alpha: 0.6),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item['vehicle'] as String? ?? '',
-                    style: GoogleFonts.sora(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
+                    const SizedBox(height: 4),
+                    Text(
+                      m.vehicleName,
+                      style: GoogleFonts.sora(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: tags.map((tag) => _Tag(label: tag)).toList(),
-                  ),
-                ],
+                    if (m.memo != null && m.memo!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        m.memo!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.labelCaps(context).copyWith(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                RichText(
+              Padding(
+                padding: const EdgeInsets.only(top: 18),
+                child: RichText(
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: '$hp',
+                        text: m.maxHp.toStringAsFixed(1),
                         style: GoogleFonts.sora(
-                          fontSize: 36,
+                          fontSize: 28,
                           fontWeight: FontWeight.w800,
-                          color: trend > 0
-                              ? AppColors.primary
-                              : AppColors.onSurface,
+                          color: AppColors.primary,
                         ),
                       ),
                       TextSpan(
@@ -282,79 +312,11 @@ class _RecordCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                _TrendIndicator(trend: trend),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.5,
-          color: AppColors.primary,
-        ),
-      ),
-    );
-  }
-}
-
-class _TrendIndicator extends StatelessWidget {
-  const _TrendIndicator({required this.trend});
-  final int trend;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (trend == 0) {
-      return Row(
-        children: [
-          const Icon(Icons.horizontal_rule,
-              color: AppColors.onSurfaceVariant, size: 16),
-          Text(l10n.trendNeutral,
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 13,
-                color: AppColors.onSurfaceVariant,
-              )),
-        ],
-      );
-    }
-    final isUp = trend > 0;
-    return Row(
-      children: [
-        Icon(
-          isUp ? Icons.trending_up : Icons.trending_down,
-          color: isUp ? AppColors.tertiary : AppColors.error,
-          size: 16,
-        ),
-        Text(
-          '${isUp ? '+' : ''}$trend HP',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 13,
-            color: isUp ? AppColors.tertiary : AppColors.error,
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -388,28 +350,19 @@ class _MonthSeparator extends StatelessWidget {
   }
 }
 
-class _EcuSyncSection extends StatelessWidget {
+class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-          style: BorderStyle.solid,
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.analytics_outlined,
-              color: AppColors.primary, size: 36),
-          const SizedBox(height: 12),
+              color: AppColors.primary, size: 48),
+          const SizedBox(height: 16),
           Text(
-            l10n.ecuSyncDescription,
-            textAlign: TextAlign.center,
+            l10n.noData,
             style: AppTextStyles.bodyMd(context)
                 .copyWith(color: AppColors.onSurfaceVariant),
           ),

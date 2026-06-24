@@ -75,15 +75,6 @@ void main() {
       vm.dispose();
     });
 
-    test('駆動方式が未選択の場合 false を返し insert() は呼ばれない', () async {
-      final vm = build();
-      vm.nameController.text = 'テスト車両';
-      vm.weightController.text = '1200';
-
-      expect(await vm.save(), false);
-      verifyNever(() => repo.insert(any()));
-      vm.dispose();
-    });
   });
 
   group('新規保存', () {
@@ -173,11 +164,11 @@ void main() {
       vm.dispose();
     });
 
-    test('null を渡すと drivetrain が null になる', () {
+    test('別の drivetrain を選択すると切り替わる', () {
       final vm = build();
       vm.selectDrivetrain(Drivetrain.rwd);
-      vm.selectDrivetrain(null);
-      expect(vm.drivetrain, null);
+      vm.selectDrivetrain(Drivetrain.awd);
+      expect(vm.drivetrain, Drivetrain.awd);
       vm.dispose();
     });
   });

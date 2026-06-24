@@ -10,13 +10,13 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<void> initialize() async {
+  Future<void> initialize({String? path}) async {
     debugPrint('[DatabaseService] initialize start');
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'horsepower_tracker.db');
-    debugPrint('[DatabaseService] db path: $path');
+    final dbPath =
+        path ?? join(await getDatabasesPath(), 'horsepower_tracker.db');
+    debugPrint('[DatabaseService] db path: $dbPath');
     _db = await openDatabase(
-      path,
+      dbPath,
       version: 1,
       onCreate: _onCreate,
     );
@@ -31,7 +31,7 @@ class DatabaseService {
         model_code        TEXT,
         weight_kg         REAL    NOT NULL,
         memo              TEXT,
-        drivetrain        TEXT,
+        drivetrain        INTEGER NOT NULL DEFAULT 0,
         displacement_cc   INTEGER,
         tire_width_mm     INTEGER,
         tire_aspect_ratio INTEGER,

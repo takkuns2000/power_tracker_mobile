@@ -62,6 +62,8 @@ class MeasurementPreparationView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _VehicleStatusCard(),
+              const SizedBox(height: 16),
+              _GpsRateCard(),
               const SizedBox(height: 32),
               _StartButton(
                 enabled: vm.selectedVehicleId != null,
@@ -112,7 +114,7 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     const Icon(Icons.timer_outlined,
                         color: AppColors.primary, size: 24),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Text(
                       l10n.navTrack,
                       style: GoogleFonts.sora(
@@ -144,18 +146,9 @@ class _SectionTitle extends StatelessWidget {
             Text(
               l10n.measurementPrep,
               style: GoogleFonts.sora(
-                fontSize: 24,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
               ),
             ),
           ],
@@ -229,58 +222,91 @@ class _EnvInputCard extends StatelessWidget {
 }
 
 class _VehicleStatusCard extends StatelessWidget {
+  static const _kGpsBlue = AppColors.secondary;
+
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<MeasurementViewModel>();
     final l10n = AppLocalizations.of(context)!;
+    final isLocked = vm.isGpsLocked;
+    final accuracyM = vm.gpsAccuracyM;
+    final segments = vm.gpsPrecisionSegments;
+
     return GlassCard(
-      leftBorderColor: AppColors.primary,
+      leftBorderColor: _kGpsBlue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Text(l10n.gpsPrecision,
+              style: AppTextStyles.labelCaps(context)
+                  .copyWith(color: _kGpsBlue)),
+          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('—', style: AppTextStyles.statsMd(context)),
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
+              Text(
+                isLocked
+                    ? accuracyM!.toStringAsFixed(1)
+                    : l10n.gpsNoSignal,
+                style: AppTextStyles.statsMd(context).copyWith(
+                  color: isLocked
+                      ? AppColors.onSurface
+                      : AppColors.onSurfaceVariant,
+                ),
+              ),
+              if (isLocked) ...[
+                const SizedBox(width: 4),
+                Text('m', style: AppTextStyles.statsMd(context)),
+              ],
+              const Spacer(),
+              GaugeSegmentRow(
+                filledCount: segments,
+                totalCount: 8,
+                color: _kGpsBlue,
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+}
+
+class _GpsRateCard extends StatelessWidget {
+  static const _kGpsBlue = AppColors.secondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<MeasurementViewModel>();
+    final l10n = AppLocalizations.of(context)!;
+    final hz = vm.gpsUpdateHz;
+    final segments = vm.gpsHzSegments;
+
+    return GlassCard(
+      leftBorderColor: _kGpsBlue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.gpsUpdateRate,
+              style: AppTextStyles.labelCaps(context).copyWith(color: _kGpsBlue)),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(l10n.gpsPrecision,
-                      style: AppTextStyles.labelCaps(context)
-                          .copyWith(fontSize: 10)),
-                  Text(l10n.gpsLock10Hz,
-                      style: AppTextStyles.labelCaps(context)
-                          .copyWith(color: AppColors.primary, fontSize: 10)),
-                ],
+              Text(
+                hz != null ? hz.toStringAsFixed(1) : '--',
+                style: AppTextStyles.statsMd(context).copyWith(
+                  color: hz != null ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                ),
               ),
-              const SizedBox(height: 8),
-              GaugeSegmentRow(filledCount: 4, totalCount: 8),
+              if (hz != null) ...[
+                const SizedBox(width: 4),
+                Text('Hz', style: AppTextStyles.statsMd(context)),
+              ],
+              const Spacer(),
+              GaugeSegmentRow(filledCount: segments, totalCount: 8, color: _kGpsBlue),
             ],
           ),
         ],
@@ -305,6 +331,7 @@ class _StartButton extends StatelessWidget {
           color: enabled
               ? AppColors.primary.withValues(alpha: 0.85)
               : AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
           boxShadow: enabled
               ? [
                   BoxShadow(
@@ -325,7 +352,6 @@ class _StartButton extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                fontStyle: FontStyle.italic,
                 color: Colors.white,
               ),
             ),

@@ -4,7 +4,7 @@ part 'tire_size.freezed.dart';
 part 'tire_size.g.dart';
 
 @freezed
-class TireSize with _$TireSize {
+abstract class TireSize with _$TireSize {
   const TireSize._();
 
   const factory TireSize({

@@ -3,15 +3,18 @@ import 'package:flutter/foundation.dart';
 import '../models/vehicle.dart';
 import '../services/gps_service.dart';
 import '../services/ps_calculator.dart';
+import 'vehicle_selection_viewmodel.dart';
 
 class RealtimeViewModel extends ChangeNotifier {
   static const Duration _kGpsTimeout = Duration(seconds: 3);
 
-  RealtimeViewModel(this._gpsService) {
+  RealtimeViewModel(this._gpsService, this._vehicleSelection) {
     _gpsService.addListener(_onGpsUpdate);
+    _vehicleSelection.addListener(_onVehicleChanged);
   }
 
   final GpsService _gpsService;
+  final VehicleSelectionViewModel _vehicleSelection;
   final PsCalculatorService _calculator = PsCalculatorService();
 
   double? _ps;
@@ -21,10 +24,6 @@ class RealtimeViewModel extends ChangeNotifier {
   double? _altitudeM;
   bool _isGpsActive = false;
   double? _gpsUpdateHz;
-  String? _selectedVehicleId;
-  double? _selectedVehicleMass;
-  double? _selectedDriveEfficiency;
-  String? _vehicleError;
   DateTime? _lastGpsTime;
   Timer? _gpsTimeoutTimer;
 
@@ -35,11 +34,11 @@ class RealtimeViewModel extends ChangeNotifier {
   double? get altitudeM => _altitudeM;
   bool get isGpsActive => _isGpsActive;
   double? get gpsUpdateHz => _gpsUpdateHz;
-  String? get selectedVehicleId => _selectedVehicleId;
-  String? get vehicleError => _vehicleError;
+  String? get selectedVehicleId => _vehicleSelection.vehicleId;
 
-  void clearVehicleError() {
-    _vehicleError = null;
+  void _onVehicleChanged() {
+    _calculator.reset();
+    notifyListeners();
   }
 
   void _onGpsUpdate() {
@@ -67,13 +66,14 @@ class RealtimeViewModel extends ChangeNotifier {
     _longitude = position.longitude;
     _altitudeM = position.altitude;
 
-    if (_selectedVehicleId != null && _selectedDriveEfficiency != null) {
+    final vehicle = _vehicleSelection.vehicle;
+    if (vehicle != null) {
       _ps = _calculator.calculate(
         currentSpeedMs: position.speed,
         currentAltitudeM: position.altitude,
         currentTime: now,
-        vehicleMassKg: _selectedVehicleMass!,
-        driveEfficiency: _selectedDriveEfficiency!,
+        vehicleMassKg: vehicle.weightKg,
+        driveEfficiency: vehicle.drivetrain.driveEfficiency,
       );
     } else {
       _ps = null;
@@ -91,25 +91,11 @@ class RealtimeViewModel extends ChangeNotifier {
   }
 
   void selectVehicle(Vehicle? vehicle) {
-    if (vehicle != null && vehicle.drivetrain == null) {
-      _vehicleError = '駆動方式が設定されていません。車両設定を確認してください。';
-      // notifyListeners() 呼ばない — callback 内で直接エラーを処理
-      return;
-    }
-    _selectedVehicleId = vehicle?.id?.toString();
-    _selectedVehicleMass = vehicle?.weightKg;
-    _selectedDriveEfficiency = vehicle?.drivetrain?.driveEfficiency;
-    _calculator.reset();
-    notifyListeners();
+    _vehicleSelection.select(vehicle);
   }
 
   void initDefaultVehicle(Vehicle vehicle) {
-    if (_selectedVehicleId != null) return;
-    if (vehicle.drivetrain == null) return; // エラーなし・スキップ
-    _selectedVehicleId = vehicle.id?.toString();
-    _selectedVehicleMass = vehicle.weightKg;
-    _selectedDriveEfficiency = vehicle.drivetrain!.driveEfficiency;
-    _calculator.reset();
+    _vehicleSelection.selectDefaultIfEmpty(vehicle);
   }
 
   void _clearValues() {
@@ -129,6 +115,7 @@ class RealtimeViewModel extends ChangeNotifier {
   void dispose() {
     _gpsTimeoutTimer?.cancel();
     _gpsService.removeListener(_onGpsUpdate);
+    _vehicleSelection.removeListener(_onVehicleChanged);
     super.dispose();
   }
 }

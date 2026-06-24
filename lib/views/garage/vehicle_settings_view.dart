@@ -8,6 +8,7 @@ import '../../app_theme.dart';
 import '../../models/drivetrain.dart';
 import '../../viewmodels/vehicle_settings_viewmodel.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/pro_lock_wrapper.dart';
 
 class VehicleSettingsView extends StatelessWidget {
   const VehicleSettingsView({super.key});
@@ -32,12 +33,12 @@ class VehicleSettingsView extends StatelessWidget {
               const SizedBox(height: 16),
               _DrivetrainModule(vm: vm),
               const SizedBox(height: 16),
-              _ProLockWrapper(
+              ProLockWrapper(
                 isPro: isPro,
                 child: _TireSizeModule(vm: vm),
               ),
               const SizedBox(height: 16),
-              _ProLockWrapper(
+              ProLockWrapper(
                 isPro: isPro,
                 child: _GearRatiosModule(vm: vm),
               ),
@@ -343,8 +344,7 @@ class _DrivetrainSelector extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: GestureDetector(
-              onTap: () => vm.selectDrivetrain(
-                  isActive ? null : drivetrain),
+              onTap: () => vm.selectDrivetrain(drivetrain),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
@@ -439,53 +439,7 @@ class _DrivetrainPainter extends CustomPainter {
       drivetrain != old.drivetrain || isActive != old.isActive;
 }
 
-class _ProLockWrapper extends StatelessWidget {
-  const _ProLockWrapper({required this.isPro, required this.child});
-  final bool isPro;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (isPro) return child;
-    return Stack(
-      children: [
-        IgnorePointer(
-          child: Opacity(opacity: 0.35, child: child),
-        ),
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.tertiary.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.lock_outline,
-                    color: AppColors.tertiary, size: 24),
-                const SizedBox(height: 8),
-                Text(l10n.proModeLimited,
-                    style: AppTextStyles.labelCaps(context).copyWith(
-                      color: AppColors.tertiary,
-                      fontSize: 11,
-                    )),
-                const SizedBox(height: 4),
-                Text(l10n.upgradeToUnlock,
-                    style: AppTextStyles.labelCaps(context).copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      fontSize: 10,
-                    )),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+// ProLockWrapper は lib/views/widgets/pro_lock_wrapper.dart に移動済み
 
 class _TireSizeModule extends StatelessWidget {
   const _TireSizeModule({required this.vm});
@@ -710,7 +664,7 @@ class _SaveButton extends StatelessWidget {
             color: isSaving
                 ? AppColors.primary.withValues(alpha: 0.5)
                 : AppColors.primary,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.3),

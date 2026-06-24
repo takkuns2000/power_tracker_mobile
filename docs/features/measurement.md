@@ -6,16 +6,18 @@ Spec: [basic_specification.md](../basic_specification.md) § 2-1, 2-2, 2-3, 3
 
 | 画面 | ファイル |
 |------|---------|
-| 計測準備 | lib/views/measurement/measurement_preparation_screen.dart |
-| 計測中 | lib/views/measurement/measuring_screen.dart |
-| 計測結果詳細 | lib/views/measurement/measurement_result_screen.dart |
+| 計測準備 | lib/views/measurement/measurement_preparation_view.dart |
+| 計測中 | lib/views/measurement/measuring_view.dart |
+| 計測結果詳細 | lib/views/measurement/measurement_result_view.dart |
 
 ## ViewModel / Model / Repository
 
 | 種別 | ファイル |
 |------|---------|
-| ViewModel | lib/viewmodels/measurement_viewmodel.dart |
+| ViewModel（計測フロー） | lib/viewmodels/measurement_viewmodel.dart |
+| ViewModel（結果画面） | lib/viewmodels/measurement_result_viewmodel.dart |
 | Model | lib/models/measurement.dart |
+| Model（データポイント） | lib/models/measurement_data_point.dart |
 | Repository | lib/repositories/measurement_repository.dart |
 
 ## 関連サービス
@@ -125,4 +127,26 @@ RPM = speed[km/h] × 1000/60 / (π × tireDiameter[m]) × finalGearRatio × gear
 
 ## 実装メモ
 
-<!-- 実装時に気づいた仕様補足・注意事項をここに追記 -->
+### 計測フロー
+
+1. **計測準備画面**：車両選択ドロップダウン + 外気温・気圧入力 + GPS信号品質表示
+2. **計測中画面**：開始/停止ボタン、リアルタイム HP 表示（現在値・最大値）、速度ストリーク背景アニメーション
+3. **計測結果画面**：AppBar 右端の Close ボタン（×）でリセット＆トップへ戻る
+
+### データ保存
+
+- GPS 更新ごとに `MeasurementDataPoint`（offsetMs・speedKmh・緯度・経度・高度・精度）を収集
+- 計測停止時に `Measurement` + `MeasurementDataPoint[]` を SQLite に一括保存（`MeasurementRepository`）
+- `vehicleSnapshot` として計測時点の車両情報を JSON 文字列で保存（後から車両を変更・削除しても記録が残る）
+
+### 計測結果画面の機能
+
+- `MeasurementResultViewModel` で結果データを管理（`measurement_result_viewmodel.dart`）
+- HP 推移グラフ（CustomPaint 折れ線）
+- 駆動ロス係数スライダー（Pro: リセットボタンあり）
+- メモ入力・保存
+- 車両情報展開パネル
+- 画像シェア / ツイートボタン（`_ShareRow`）
+  - `PictureRecorder` + `Canvas` で 800×600px の PNG を生成
+  - `share_plus v13`（`ShareParams` + `sharePositionOrigin`）で共有
+  - シェアロジックは ViewModel に集約（MVVM 厳守）
