@@ -114,32 +114,29 @@ class MeasurementViewModel extends ChangeNotifier {
 
   Future<void> stopMeasurement() async {
     _status = MeasurementStatus.finished;
-    notifyListeners();
 
     final vehicle = _vehicleSelection.vehicle;
     if (vehicle == null || _startTime == null) {
       _saveError = '計測データが不足しています。';
-      notifyListeners();
-      return;
-    }
-
-    try {
-      final measurement = Measurement(
-        vehicleId: vehicle.id,
-        vehicleName: vehicle.name,
-        vehicleWeightKg: vehicle.weightKg,
-        vehicleSnapshot: vehicle,
-        measuredAt: _startTime!,
-        maxHp: _maxPs,
-        temperatureCelsius: _temperatureCelsius,
-        pressureHpa: _pressureHpa,
-        driveLossCoefficient: 1.0 - vehicle.drivetrain.driveEfficiency,
-        dataPoints: List.unmodifiable(_dataPoints),
-      );
-      _savedMeasurement = await _repository.insert(measurement);
-    } catch (e) {
-      debugPrint('[MeasurementViewModel] save error: $e');
-      _saveError = '計測データの保存に失敗しました。';
+    } else {
+      try {
+        final measurement = Measurement(
+          vehicleId: vehicle.id,
+          vehicleName: vehicle.name,
+          vehicleWeightKg: vehicle.weightKg,
+          vehicleSnapshot: vehicle,
+          measuredAt: _startTime!,
+          maxHp: _maxPs,
+          temperatureCelsius: _temperatureCelsius,
+          pressureHpa: _pressureHpa,
+          driveLossCoefficient: 1.0 - vehicle.drivetrain.driveEfficiency,
+          dataPoints: List.unmodifiable(_dataPoints),
+        );
+        _savedMeasurement = await _repository.insert(measurement);
+      } catch (e) {
+        debugPrint('[MeasurementViewModel] save error: $e');
+        _saveError = '計測データの保存に失敗しました。';
+      }
     }
     notifyListeners();
   }

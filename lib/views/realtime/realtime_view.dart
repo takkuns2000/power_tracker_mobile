@@ -19,9 +19,13 @@ class RealtimeView extends StatelessWidget {
     final gps = context.watch<GpsViewModel>();
     final garage = context.watch<GarageViewModel>();
 
-    if (vm.selectedVehicleId == null && garage.vehicles.isNotEmpty) {
-      context.read<RealtimeViewModel>().initDefaultVehicle(garage.vehicles.first);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      if (context.read<RealtimeViewModel>().selectedVehicleId == null &&
+          garage.vehicles.isNotEmpty) {
+        context.read<RealtimeViewModel>().initDefaultVehicle(garage.vehicles.first);
+      }
+    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,

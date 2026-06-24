@@ -133,36 +133,28 @@ class MeasurementResultViewModel extends ChangeNotifier {
     final id = _measurement.id;
     if (id == null) return;
     final normalized = memo?.isEmpty ?? true ? null : memo;
-    String? err;
     try {
       await _repository.updateMemo(id, normalized);
       _measurement = _measurement.copyWith(memo: normalized);
     } catch (e) {
       debugPrint('[MeasurementResultViewModel] saveMemo error: $e');
-      err = 'メモの保存に失敗しました。';
+      _saveError = 'メモの保存に失敗しました。';
     }
-    if (err != null) {
-      _saveError = err;
-      notifyListeners();
-    }
+    notifyListeners();
   }
 
   Future<void> saveDriveLossCoefficient(double coefficient) async {
     final id = _measurement.id;
     if (id == null) return;
-    String? err;
     try {
       await _repository.updateDriveLossCoefficient(id, coefficient);
       _measurement = _measurement.copyWith(driveLossCoefficient: coefficient);
       _hpValues = _computeHpValues(_measurement);
     } catch (e) {
       debugPrint('[MeasurementResultViewModel] saveDriveLoss error: $e');
-      err = '駆動ロス係数の保存に失敗しました。';
+      _saveError = '駆動ロス係数の保存に失敗しました。';
     }
-    if (err != null) {
-      _saveError = err;
-      notifyListeners();
-    }
+    notifyListeners();
   }
 
   Future<void> shareImage(Rect origin) async {

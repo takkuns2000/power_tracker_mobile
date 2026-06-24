@@ -348,7 +348,7 @@ class _HpChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (hpValues.isEmpty) return;
+    if (hpValues.length < 2) return;
 
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.05)
