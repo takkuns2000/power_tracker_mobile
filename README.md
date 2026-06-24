@@ -1,3 +1,11 @@
+## License / Copyright
+
+Copyright (c) 2026 Takumi Takenaka. All rights reserved.
+
+権利者の許可なく、コードの複製、改変、再配布、および商業目的での利用を行うことを一切禁止します。
+
+(Unauthorized copying, modification, redistribution, or commercial use of this code is strictly prohibited.)
+
 # HorsepowerTracker
 
 スマートフォンで自車両の馬力を計測・記録・分析するモバイルアプリです。
