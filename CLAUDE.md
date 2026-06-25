@@ -43,6 +43,11 @@ View が直接触れるのは ViewModel のみ。以下は禁止：
 - 例`context.read<XxxService>()` — View から Service を直接取得しない
 - Repository / Service への直接アクセスは必ず ViewModel 経由にする
 
+### UIコンポーネント規約
+
+- **カード表示は必ず `GlassCard` を使う** — 表示カード・アクションエリアを問わず、画面内の独立したコンテンツ単位はすべて `lib/views/widgets/glass_card.dart` の `GlassCard` でラップする
+- **ダイアログは必ず `showConfirmDialog` を使う** — `AlertDialog` 直接使用禁止。`lib/views/widgets/confirm_dialog.dart` の `showConfirmDialog` / `ConfirmDialog` を使う
+
 ### エラーハンドリング規約
 
 - **エラーキャッチは ViewModel で行う**。View に例外を伝播させない（View に try/catch を書かない）

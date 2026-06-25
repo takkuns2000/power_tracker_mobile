@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../models/drivetrain.dart';
 import '../../viewmodels/vehicle_settings_viewmodel.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/pro_lock_wrapper.dart';
 
@@ -24,54 +25,52 @@ class VehicleSettingsView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: _VehicleSettingsAppBar(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _BasicInfoModule(vm: vm),
-              const SizedBox(height: 16),
-              _DrivetrainModule(vm: vm),
-              const SizedBox(height: 16),
-              ProLockWrapper(
-                isPro: isPro,
-                child: _TireSizeModule(vm: vm),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _BasicInfoModule(vm: vm),
+                    const SizedBox(height: 16),
+                    _DrivetrainModule(vm: vm),
+                    const SizedBox(height: 16),
+                    ProLockWrapper(
+                      isPro: isPro,
+                      child: _TireSizeModule(vm: vm),
+                    ),
+                    const SizedBox(height: 16),
+                    ProLockWrapper(
+                      isPro: isPro,
+                      child: _GearRatiosModule(vm: vm),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              ProLockWrapper(
-                isPro: isPro,
-                child: _GearRatiosModule(vm: vm),
-              ),
-            ],
-          ),
+            ),
+            _SaveButton(
+              isSaving: vm.isSaving,
+              onTap: () async {
+                final success = await vm.save();
+                if (!context.mounted) return;
+                if (success) {
+                  Navigator.of(context).pop();
+                } else {
+                  showConfirmDialog<void>(
+                    context: context,
+                    icon: Icons.error_outline,
+                    title: l10n.inputError,
+                    content: Text(l10n.requiredFieldsError),
+                    okLabel: l10n.close,
+                  );
+                }
+              },
+            ),
+          ],
         ),
-      ),
-      bottomNavigationBar: _SaveButton(
-        isSaving: vm.isSaving,
-        onTap: () async {
-          final success = await vm.save();
-          if (!context.mounted) return;
-          if (success) {
-            Navigator.of(context).pop();
-          } else {
-            showDialog<void>(
-              context: context,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.surface,
-                title: Text(l10n.inputError,
-                    style: AppTextStyles.headlineLg(context)
-                        .copyWith(color: AppColors.error)),
-                content: Text(l10n.requiredFieldsError),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.close),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
       ),
     );
   }
@@ -647,7 +646,7 @@ class _SaveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: AppColors.background.withValues(alpha: 0.9),
         border: Border(

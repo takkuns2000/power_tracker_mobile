@@ -190,11 +190,11 @@ abstract class AppLocalizations {
   /// **'Weight'**
   String get vehicleCardWeight;
 
-  /// No description provided for @vehicleCardPower.
+  /// No description provided for @vehicleCardDisplacement.
   ///
   /// In ja, this message translates to:
-  /// **'Power'**
-  String get vehicleCardPower;
+  /// **'Displacement'**
+  String get vehicleCardDisplacement;
 
   /// No description provided for @proModeRequired.
   ///

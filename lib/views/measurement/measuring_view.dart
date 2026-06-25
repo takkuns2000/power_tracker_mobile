@@ -8,6 +8,7 @@ import '../../viewmodels/measurement_viewmodel.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import '../widgets/pro_lock_wrapper.dart';
 import 'measurement_result_view.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class MeasuringView extends StatelessWidget {
@@ -23,21 +24,12 @@ class MeasuringView extends StatelessWidget {
       if (vm.saveError != null) {
         final error = vm.saveError!;
         vm.clearSaveError();
-        showDialog<void>(
+        showConfirmDialog<void>(
           context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            title: Text(l10n.inputError,
-                style: AppTextStyles.headlineLg(context)
-                    .copyWith(color: AppColors.error)),
-            content: Text(error),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.close),
-              ),
-            ],
-          ),
+          icon: Icons.error_outline,
+          title: l10n.inputError,
+          content: Text(error),
+          okLabel: l10n.close,
         );
       }
     });
@@ -50,42 +42,50 @@ class MeasuringView extends StatelessWidget {
         children: [
           _SpeedStreaks(),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _StatusCard(startTime: vm.startTime),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: _HpCard(currentPs: vm.currentPs, maxPs: vm.maxPs),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ProLockWrapper(
-                      isPro: isPro,
-                      child: _TorqueCard(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _StatusCard(startTime: vm.startTime),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: _HpCard(
+                              currentPs: vm.currentPs, maxPs: vm.maxPs),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ProLockWrapper(
+                            isPro: isPro,
+                            child: _TorqueCard(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                _StopButton(
+                  onTap: () async {
+                    final vm = context.read<MeasurementViewModel>();
+                    await vm.stopMeasurement();
+                    if (!context.mounted) return;
+                    if (vm.savedMeasurement != null) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => MeasurementResultView(
+                            viewModel: vm.createResultViewModel(),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
-          ),
-          _StopButton(
-            onTap: () async {
-              final vm = context.read<MeasurementViewModel>();
-              await vm.stopMeasurement();
-              if (!context.mounted) return;
-              if (vm.savedMeasurement != null) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => MeasurementResultView(
-                      viewModel: vm.createResultViewModel(),
-                    ),
-                  ),
-                );
-              }
-            },
           ),
         ],
       ),
@@ -172,7 +172,7 @@ class _StreakPainter extends CustomPainter {
         end: Alignment.bottomCenter,
         colors: [
           Colors.transparent,
-          AppColors.primary.withValues(alpha: 0.08),
+          AppColors.primary.withValues(alpha: 0.25),
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, 2, size.height))
@@ -290,6 +290,7 @@ class _HpCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
@@ -341,6 +342,7 @@ class _TorqueCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
@@ -376,58 +378,48 @@ class _StopButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [
-              AppColors.background,
-              AppColors.background.withValues(alpha: 0.8),
-              Colors.transparent,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            AppColors.background,
+            AppColors.background.withValues(alpha: 0.8),
+            Colors.transparent,
+          ],
+        ),
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.4),
+                blurRadius: 30,
+              ),
             ],
           ),
-        ),
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                  blurRadius: 30,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.stop_circle_outlined,
+                  color: Colors.white, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                l10n.stopMeasurement,
+                style: GoogleFonts.sora(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.stop_circle_outlined,
-                        color: Colors.white, size: 24),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.stopMeasurement,
-                      style: GoogleFonts.sora(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

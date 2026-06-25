@@ -19,7 +19,7 @@
   "garage": "ガレージ",
   "fleetOverview": "Fleet Overview",
   "vehicleCardWeight": "Weight",
-  "vehicleCardPower": "Power",
+  "vehicleCardDisplacement": "Displacement",
   "proModeRequired": "Pro Mode が必要です",
   "proModeRequiredMessage": "複数車両の登録には Pro Mode へのアップグレードが必要です。",
 

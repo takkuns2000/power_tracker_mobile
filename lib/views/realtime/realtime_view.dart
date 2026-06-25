@@ -19,10 +19,6 @@ class RealtimeView extends StatelessWidget {
     final gps = context.watch<GpsViewModel>();
     final garage = context.watch<GarageViewModel>();
 
-    if (vm.selectedVehicleId == null && garage.vehicles.isNotEmpty) {
-      context.read<RealtimeViewModel>().initDefaultVehicle(garage.vehicles.first);
-    }
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _RealtimeAppBar(),
@@ -120,25 +116,18 @@ class _RealtimeAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.speed,
-                        color: AppColors.primary, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.navLive,
-                      style: GoogleFonts.sora(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+                const Icon(Icons.speed,
+                    color: AppColors.primary, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.navLive,
+                  style: GoogleFonts.sora(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
-                const Icon(Icons.more_vert,
-                    color: AppColors.onSurfaceVariant),
               ],
             ),
           ),
@@ -322,7 +311,7 @@ class _HudInfoBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final hzLabel = gpsUpdateHz != null
-        ? 'GPS ${gpsUpdateHz!.toStringAsFixed(0)}Hz'
+        ? 'GPS ${gpsUpdateHz!.toStringAsFixed(1)}Hz'
         : 'GPS --Hz';
 
     return GlassCard(

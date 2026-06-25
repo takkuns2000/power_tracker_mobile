@@ -8,6 +8,7 @@ import '../../app_theme.dart';
 import '../../models/measurement.dart';
 import '../../viewmodels/records_viewmodel.dart';
 import '../measurement/measurement_result_view.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class RecordsView extends StatelessWidget {
@@ -138,31 +139,19 @@ class RecordsView extends StatelessWidget {
               onPressed: (_) async {
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (_) => AlertDialog(
-                    backgroundColor: AppColors.surface,
-                    title: Text(
-                      l10n.deleteRecord,
-                      style: AppTextStyles.headlineLg(context)
-                          .copyWith(color: AppColors.error),
-                    ),
-                    content: Text(
-                      l10n.deleteRecordConfirm,
-                      style: AppTextStyles.bodyMd(context),
-                    ),
+                  barrierColor: Colors.black.withValues(alpha: 0.6),
+                  builder: (ctx) => ConfirmDialog(
+                    icon: Icons.delete_outline,
+                    title: l10n.deleteRecord,
+                    content: Text(l10n.deleteRecordConfirm),
                     actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(l10n.cancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(
-                          l10n.delete,
-                          style:
-                              const TextStyle(color: AppColors.error),
-                        ),
+                      ConfirmDialogButton(
+                        label: l10n.cancel,
+                        onPressed: () => Navigator.of(ctx).pop(false),
                       ),
                     ],
+                    okLabel: l10n.delete,
+                    onOk: () => Navigator.of(ctx).pop(true),
                   ),
                 );
                 if (confirmed == true && context.mounted) {

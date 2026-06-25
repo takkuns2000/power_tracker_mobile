@@ -3,18 +3,22 @@ import 'package:flutter/foundation.dart';
 import '../models/vehicle.dart';
 import '../services/gps_service.dart';
 import '../services/ps_calculator.dart';
+import 'garage_viewmodel.dart';
 import 'vehicle_selection_viewmodel.dart';
 
 class RealtimeViewModel extends ChangeNotifier {
-  static const Duration _kGpsTimeout = Duration(seconds: 3);
+  static const Duration _kGpsTimeout = Duration(seconds: 5);
 
-  RealtimeViewModel(this._gpsService, this._vehicleSelection) {
+  RealtimeViewModel(this._gpsService, this._vehicleSelection, this._garageVm) {
     _gpsService.addListener(_onGpsUpdate);
     _vehicleSelection.addListener(_onVehicleChanged);
+    _garageVm.addListener(_onVehiclesChanged);
+    _initDefaultIfNeeded();
   }
 
   final GpsService _gpsService;
   final VehicleSelectionViewModel _vehicleSelection;
+  final GarageViewModel _garageVm;
   final PsCalculatorService _calculator = PsCalculatorService();
 
   double? _ps;
@@ -92,8 +96,14 @@ class RealtimeViewModel extends ChangeNotifier {
     _vehicleSelection.select(vehicle);
   }
 
-  void initDefaultVehicle(Vehicle vehicle) {
-    _vehicleSelection.selectDefaultIfEmpty(vehicle);
+  void _onVehiclesChanged() => _initDefaultIfNeeded();
+
+  void _initDefaultIfNeeded() {
+    if (_vehicleSelection.vehicleId != null) return;
+    final vehicles = _garageVm.vehicles;
+    if (vehicles.isEmpty) return;
+    _vehicleSelection.selectDefaultIfEmpty(vehicles.first);
+    notifyListeners();
   }
 
   void _handlePermissionDenied() {
@@ -118,6 +128,7 @@ class RealtimeViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _gpsTimeoutTimer?.cancel();
+    _garageVm.removeListener(_onVehiclesChanged);
     _gpsService.removeListener(_onGpsUpdate);
     _vehicleSelection.removeListener(_onVehicleChanged);
     super.dispose();
