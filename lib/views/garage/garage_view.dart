@@ -159,25 +159,18 @@ class _GarageAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.speed,
-                        color: AppColors.primary, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.navVehicles,
-                      style: GoogleFonts.sora(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+                const Icon(Icons.speed,
+                    color: AppColors.primary, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.navVehicles,
+                  style: GoogleFonts.sora(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
-                const Icon(Icons.settings_outlined,
-                    color: AppColors.onSurfaceVariant),
               ],
             ),
           ),
@@ -271,7 +264,7 @@ class _VehicleCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.vehicleCardPower,
+                        Text(l10n.vehicleCardDisplacement,
                             style: AppTextStyles.labelCaps(context)
                                 .copyWith(fontSize: 10)),
                         const SizedBox(height: 4),
@@ -279,12 +272,11 @@ class _VehicleCard extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: '--',
-                                style: AppTextStyles.statsMd(context)
-                                    .copyWith(color: AppColors.primary),
+                                text: vehicle.displacementCc?.toString() ?? '--',
+                                style: AppTextStyles.statsMd(context),
                               ),
                               TextSpan(
-                                text: ' hp',
+                                text: ' ${l10n.unitCc}',
                                 style: AppTextStyles.statsMd(context).copyWith(
                                   fontSize: 12,
                                   color: AppColors.onSurfaceVariant,

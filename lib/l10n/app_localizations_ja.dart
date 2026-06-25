@@ -57,7 +57,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get vehicleCardWeight => 'Weight';
 
   @override
-  String get vehicleCardPower => 'Power';
+  String get vehicleCardDisplacement => 'Displacement';
 
   @override
   String get proModeRequired => 'Pro Mode が必要です';

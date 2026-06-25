@@ -5,12 +5,16 @@ import 'package:horsepower_tracker_mobile/models/drivetrain.dart';
 import 'package:horsepower_tracker_mobile/models/vehicle.dart';
 import 'package:horsepower_tracker_mobile/services/gps_service.dart';
 import 'package:horsepower_tracker_mobile/services/ps_calculator.dart';
+import 'package:horsepower_tracker_mobile/viewmodels/garage_viewmodel.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/realtime_viewmodel.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/vehicle_selection_viewmodel.dart';
+import 'package:mocktail/mocktail.dart';
 
 // ---------------------------------------------------------------------------
 // Fake GPS Service
 // ---------------------------------------------------------------------------
+
+class _MockGarageViewModel extends Mock implements GarageViewModel {}
 
 class _FakeGpsService extends GpsService {
   GpsPermissionStatus _status = GpsPermissionStatus.unknown;
@@ -282,12 +286,15 @@ void main() {
   group('RealtimeViewModel', () {
     late _FakeGpsService gps;
     late VehicleSelectionViewModel vehicleSelection;
+    late _MockGarageViewModel garage;
     late RealtimeViewModel vm;
 
     setUp(() {
       gps = _FakeGpsService();
       vehicleSelection = VehicleSelectionViewModel();
-      vm = RealtimeViewModel(gps, vehicleSelection);
+      garage = _MockGarageViewModel();
+      when(() => garage.vehicles).thenReturn(const []);
+      vm = RealtimeViewModel(gps, vehicleSelection, garage);
     });
 
     tearDown(() {
