@@ -126,5 +126,11 @@
   "locationPermissionAction": "許可する",
 
   "loadError": "データ読み込みエラー",
-  "loadErrorMessage": "車両データの読み込みに失敗しました。"
+  "loadErrorMessage": "車両データの読み込みに失敗しました。",
+
+  "delete": "削除",
+  "cancel": "キャンセル",
+  "deleteRecord": "記録を削除",
+  "deleteRecordConfirm": "この計測記録を削除しますか？削除したデータは復元できません。",
+  "deleteRecordError": "記録の削除に失敗しました。"
 }

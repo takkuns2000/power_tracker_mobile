@@ -76,6 +76,15 @@ class MeasurementRepository {
     );
   }
 
+  Future<void> delete(int id) async {
+    debugPrint('[MeasurementRepository] delete: id=$id');
+    await _db.database.transaction((txn) async {
+      await txn.delete('measurement_data_points',
+          where: 'measurement_id = ?', whereArgs: [id]);
+      await txn.delete('measurements', where: 'id = ?', whereArgs: [id]);
+    });
+  }
+
   Measurement _fromRow(
     Map<String, dynamic> row,
     List<Map<String, dynamic>> dataPointRows,
