@@ -6,6 +6,7 @@ import 'package:horsepower_tracker_mobile/models/vehicle.dart';
 import 'package:horsepower_tracker_mobile/services/gps_service.dart';
 import 'package:horsepower_tracker_mobile/services/ps_calculator.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/garage_viewmodel.dart';
+import 'package:horsepower_tracker_mobile/viewmodels/navigation_viewmodel.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/realtime_viewmodel.dart';
 import 'package:horsepower_tracker_mobile/viewmodels/vehicle_selection_viewmodel.dart';
 import 'package:mocktail/mocktail.dart';
@@ -283,14 +284,16 @@ void main() {
     late _FakeGpsService gps;
     late VehicleSelectionViewModel vehicleSelection;
     late _MockGarageViewModel garage;
+    late NavigationViewModel navigation;
     late RealtimeViewModel vm;
 
     setUp(() {
       gps = _FakeGpsService();
       vehicleSelection = VehicleSelectionViewModel();
       garage = _MockGarageViewModel();
+      navigation = NavigationViewModel();
       when(() => garage.vehicles).thenReturn(const []);
-      vm = RealtimeViewModel(gps, vehicleSelection, garage);
+      vm = RealtimeViewModel(gps, vehicleSelection, garage, navigation);
     });
 
     tearDown(() {
@@ -406,9 +409,23 @@ void main() {
       expect(psFwd, lessThan(psRwd));
     });
 
+    test('LIVEタブを開き直すと選択中車両が最新重量に更新される', () {
+      final oldVehicle = _vehicle(id: 1, weightKg: 1200, drivetrain: Drivetrain.rwd);
+      final updatedVehicle = _vehicle(id: 1, weightKg: 1500, drivetrain: Drivetrain.rwd);
+
+      vm.selectVehicle(oldVehicle);
+      expect(vehicleSelection.vehicle?.weightKg, 1200.0);
+
+      when(() => garage.vehicles).thenAnswer((_) => [updatedVehicle]);
+      navigation.setIndex(1); // 別タブへ
+      navigation.setIndex(0); // LIVEタブへ戻る
+
+      expect(vehicleSelection.vehicle?.weightKg, 1500.0);
+    });
+
     test('AWD 車両は RWD より高い PS を返す', () {
       // AWD (η=0.80) は RWD (η=0.85) より η が小さい（損失が多い）ので、
-      // ke2 が大きくなり PS は高くなる
+      // enginePowerW が大きくなり PS は高くなる
       final t0 = DateTime(2024);
       final t1 = t0.add(const Duration(seconds: 1));
 

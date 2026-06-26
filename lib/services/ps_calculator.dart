@@ -49,20 +49,13 @@ class PsCalculatorService {
     final dtSec = currentTime.difference(prev).inMicroseconds / 1e6;
     if (dtSec <= 0) return 0.0;
 
-    // 運動エネルギー差 [J]
     final deltaKineticJ =
         vehicleMassKg * (math.pow(currentSpeedMs, 2) - math.pow(prevSpeed, 2)) / 2;
-    // 位置エネルギー差 [J]
     final climbWorkJ = vehicleMassKg * _g * (currentAltitudeM - prevAlt);
-
-    // ホイール出力 [W]（加速＋勾配を Δt で出力化）
     final wheelPowerW = (deltaKineticJ + climbWorkJ) / dtSec;
-
-    // 集約ロス係数でエンジン出力へ換算（伝達損失）
     final enginePowerW = wheelPowerW / driveEfficiency;
     if (enginePowerW <= 0) return 0.0;
 
-    // W → PS 変換
     return enginePowerW / _wattsPerPs;
   }
 

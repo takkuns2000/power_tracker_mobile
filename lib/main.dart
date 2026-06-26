@@ -57,6 +57,7 @@ class HorsepowerTrackerApp extends StatelessWidget {
             ctx.read<GpsService>(),
             ctx.read<VehicleSelectionViewModel>(),
             ctx.read<GarageViewModel>(),
+            ctx.read<NavigationViewModel>(),
           ),
         ),
         ChangeNotifierProvider(
