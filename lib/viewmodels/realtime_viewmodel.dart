@@ -4,21 +4,30 @@ import '../models/vehicle.dart';
 import '../services/gps_service.dart';
 import '../services/ps_calculator.dart';
 import 'garage_viewmodel.dart';
+import 'navigation_viewmodel.dart';
 import 'vehicle_selection_viewmodel.dart';
 
 class RealtimeViewModel extends ChangeNotifier {
   static const Duration _kGpsTimeout = Duration(seconds: 5);
+  static const int _liveTabIndex = 0;
 
-  RealtimeViewModel(this._gpsService, this._vehicleSelection, this._garageVm) {
+  RealtimeViewModel(
+    this._gpsService,
+    this._vehicleSelection,
+    this._garageVm,
+    this._navigation,
+  ) {
     _gpsService.addListener(_onGpsUpdate);
     _vehicleSelection.addListener(_onVehicleChanged);
     _garageVm.addListener(_onVehiclesChanged);
+    _navigation.addListener(_onTabChanged);
     _initDefaultIfNeeded();
   }
 
   final GpsService _gpsService;
   final VehicleSelectionViewModel _vehicleSelection;
   final GarageViewModel _garageVm;
+  final NavigationViewModel _navigation;
   final PsCalculatorService _calculator = PsCalculatorService();
 
   double? _ps;
@@ -96,6 +105,12 @@ class RealtimeViewModel extends ChangeNotifier {
     _vehicleSelection.select(vehicle);
   }
 
+  void _onTabChanged() {
+    if (_navigation.currentIndex == _liveTabIndex) {
+      _vehicleSelection.reloadSelectedVehicle(_garageVm.vehicles);
+    }
+  }
+
   void _onVehiclesChanged() => _initDefaultIfNeeded();
 
   void _initDefaultIfNeeded() {
@@ -128,6 +143,7 @@ class RealtimeViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _gpsTimeoutTimer?.cancel();
+    _navigation.removeListener(_onTabChanged);
     _garageVm.removeListener(_onVehiclesChanged);
     _gpsService.removeListener(_onGpsUpdate);
     _vehicleSelection.removeListener(_onVehicleChanged);

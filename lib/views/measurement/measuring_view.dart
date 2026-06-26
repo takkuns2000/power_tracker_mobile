@@ -273,9 +273,9 @@ class _HpCard extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
+      fillHeight: true,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -288,30 +288,33 @@ class _HpCard extends StatelessWidget {
                       .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                displayPs,
-                style: GoogleFonts.sora(
-                  fontSize: 72,
-                  fontWeight: FontWeight.w800,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.primary,
-                ),
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    displayPs,
+                    style: GoogleFonts.sora(
+                      fontSize: 72,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(l10n.unitPs,
+                      style: GoogleFonts.sora(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.onSurfaceVariant,
+                      )),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(l10n.unitPs,
-                  style: GoogleFonts.sora(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.onSurfaceVariant,
-                  )),
-            ],
+            ),
           ),
         ],
       ),
@@ -325,9 +328,9 @@ class _TorqueCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return GlassCard(
       padding: const EdgeInsets.all(20),
+      fillHeight: true,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -340,30 +343,33 @@ class _TorqueCard extends StatelessWidget {
                       .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '--',
-                style: GoogleFonts.sora(
-                  fontSize: 72,
-                  fontWeight: FontWeight.w800,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.primary,
-                ),
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '--',
+                    style: GoogleFonts.sora(
+                      fontSize: 72,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(l10n.unitKgm,
+                      style: GoogleFonts.sora(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.onSurfaceVariant,
+                      )),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(l10n.unitKgm,
-                  style: GoogleFonts.sora(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.onSurfaceVariant,
-                  )),
-            ],
+            ),
           ),
         ],
       ),
