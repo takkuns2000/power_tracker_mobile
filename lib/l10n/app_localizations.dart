@@ -190,11 +190,11 @@ abstract class AppLocalizations {
   /// **'Weight'**
   String get vehicleCardWeight;
 
-  /// No description provided for @vehicleCardPower.
+  /// No description provided for @vehicleCardDisplacement.
   ///
   /// In ja, this message translates to:
-  /// **'Power'**
-  String get vehicleCardPower;
+  /// **'Displacement'**
+  String get vehicleCardDisplacement;
 
   /// No description provided for @proModeRequired.
   ///
@@ -789,6 +789,36 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'車両データの読み込みに失敗しました。'**
   String get loadErrorMessage;
+
+  /// No description provided for @delete.
+  ///
+  /// In ja, this message translates to:
+  /// **'削除'**
+  String get delete;
+
+  /// No description provided for @cancel.
+  ///
+  /// In ja, this message translates to:
+  /// **'キャンセル'**
+  String get cancel;
+
+  /// No description provided for @deleteRecord.
+  ///
+  /// In ja, this message translates to:
+  /// **'記録を削除'**
+  String get deleteRecord;
+
+  /// No description provided for @deleteRecordConfirm.
+  ///
+  /// In ja, this message translates to:
+  /// **'この計測記録を削除しますか？削除したデータは復元できません。'**
+  String get deleteRecordConfirm;
+
+  /// No description provided for @deleteRecordError.
+  ///
+  /// In ja, this message translates to:
+  /// **'記録の削除に失敗しました。'**
+  String get deleteRecordError;
 }
 
 class _AppLocalizationsDelegate

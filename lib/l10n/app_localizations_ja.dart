@@ -57,7 +57,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get vehicleCardWeight => 'Weight';
 
   @override
-  String get vehicleCardPower => 'Power';
+  String get vehicleCardDisplacement => 'Displacement';
 
   @override
   String get proModeRequired => 'Pro Mode が必要です';
@@ -356,4 +356,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loadErrorMessage => '車両データの読み込みに失敗しました。';
+
+  @override
+  String get delete => '削除';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get deleteRecord => '記録を削除';
+
+  @override
+  String get deleteRecordConfirm => 'この計測記録を削除しますか？削除したデータは復元できません。';
+
+  @override
+  String get deleteRecordError => '記録の削除に失敗しました。';
 }

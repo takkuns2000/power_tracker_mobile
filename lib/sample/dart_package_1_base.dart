@@ -30,6 +30,9 @@ List<Map<String, double>> gpsData = [
 ];
 
 
+void main(List<String> args) {
+  calculateWork(gpsData, vehicleMass);
+}
 
 
 // 仕事量を計算する関数

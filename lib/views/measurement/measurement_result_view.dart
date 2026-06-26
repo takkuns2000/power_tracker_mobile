@@ -8,6 +8,7 @@ import '../../models/measurement.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/measurement_result_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/pro_lock_wrapper.dart';
 
@@ -41,21 +42,12 @@ class _MeasurementResultBody extends StatelessWidget {
       if (err != null) {
         if (vm.saveError != null) vm.clearSaveError();
         if (vm.shareError != null) vm.clearShareError();
-        showDialog<void>(
+        showConfirmDialog<void>(
           context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            title: Text(l10n.inputError,
-                style: AppTextStyles.headlineLg(context)
-                    .copyWith(color: AppColors.error)),
-            content: Text(err),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.close),
-              ),
-            ],
-          ),
+          icon: Icons.error_outline,
+          title: l10n.inputError,
+          content: Text(err),
+          okLabel: l10n.close,
         );
       }
     });
@@ -69,24 +61,19 @@ class _MeasurementResultBody extends StatelessWidget {
           if (resultVm.hasPendingChanges) {
             final shouldSave = await showDialog<bool>(
               context: context,
-              builder: (ctx) => AlertDialog(
-                backgroundColor: AppColors.surface,
-                title: Text('メモの変更',
-                    style: AppTextStyles.headlineLg(ctx)
-                        .copyWith(color: AppColors.onSurface)),
+              barrierColor: Colors.black.withValues(alpha: 0.6),
+              builder: (ctx) => ConfirmDialog(
+                icon: Icons.edit_note_outlined,
+                title: 'メモの変更',
                 content: const Text('入力中のメモを保存しますか？'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('変更を削除',
-                        style: TextStyle(color: AppColors.error)),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('保存する',
-                        style: TextStyle(color: AppColors.primary)),
+                  ConfirmDialogButton(
+                    label: '変更を削除',
+                    onPressed: () => Navigator.of(ctx).pop(false),
                   ),
                 ],
+                okLabel: '保存する',
+                onOk: () => Navigator.of(ctx).pop(true),
               ),
             );
             if (!context.mounted) return;
@@ -113,12 +100,15 @@ class _MeasurementResultBody extends StatelessWidget {
               const SizedBox(height: 16),
               _ProBento(isPro: isPro),
               const SizedBox(height: 16),
-              _VehicleCard(
-                measurement: m,
-                isExpanded: vm.isVehicleExpanded,
-                onToggle: () => context
-                    .read<MeasurementResultViewModel>()
-                    .toggleVehicleExpanded(),
+              ValueListenableBuilder<bool>(
+                valueListenable: vm.vehicleExpandedNotifier,
+                builder: (_, isExpanded, _) => _VehicleCard(
+                  measurement: m,
+                  isExpanded: isExpanded,
+                  onToggle: () => context
+                      .read<MeasurementResultViewModel>()
+                      .toggleVehicleExpanded(),
+                ),
               ),
               const SizedBox(height: 16),
               _ConditionsCard(
@@ -784,15 +774,6 @@ class _ShareRow extends StatelessWidget {
         : Rect.fromLTWH(0, 0, 10, 10);
   }
 
-  static ButtonStyle _buttonStyle() => OutlinedButton.styleFrom(
-        foregroundColor: AppColors.onSurface,
-        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        minimumSize: const Size.fromHeight(52),
-        textStyle: const TextStyle(letterSpacing: 1.2),
-      );
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -800,29 +781,43 @@ class _ShareRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Builder(
-            builder: (ctx) => OutlinedButton.icon(
-              onPressed: () {
-                ctx.read<MeasurementResultViewModel>().shareImage(_originOf(ctx));
-              },
-              icon: const Icon(Icons.image_outlined, size: 18),
-              label: Text(l10n.shareImage,
-                  style: AppTextStyles.labelCaps(context)),
-              style: _buttonStyle(),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: Builder(
+              builder: (ctx) => TextButton.icon(
+                onPressed: () {
+                  ctx.read<MeasurementResultViewModel>().shareImage(_originOf(ctx));
+                },
+                icon: const Icon(Icons.image_outlined, size: 18),
+                label: Text(l10n.shareImage,
+                    style: AppTextStyles.labelCaps(context)),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.onSurface,
+                  minimumSize: const Size.fromHeight(52),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
             ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Builder(
-            builder: (ctx) => OutlinedButton.icon(
-              onPressed: () {
-                ctx.read<MeasurementResultViewModel>().tweetImage(_originOf(ctx));
-              },
-              icon: const Icon(Icons.alternate_email, size: 18),
-              label: Text(l10n.tweetResult,
-                  style: AppTextStyles.labelCaps(context)),
-              style: _buttonStyle(),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: Builder(
+              builder: (ctx) => TextButton.icon(
+                onPressed: () {
+                  ctx.read<MeasurementResultViewModel>().tweetImage(_originOf(ctx));
+                },
+                icon: const Icon(Icons.alternate_email, size: 18),
+                label: Text(l10n.tweetResult,
+                    style: AppTextStyles.labelCaps(context)),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.onSurface,
+                  minimumSize: const Size.fromHeight(52),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
             ),
           ),
         ),

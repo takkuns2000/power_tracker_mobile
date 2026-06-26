@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -92,15 +92,15 @@ class GpsService extends ChangeNotifier with WidgetsBindingObserver {
 
   void _startStream() {
     _positionSub?.cancel();
-
-    final LocationSettings settings;
-    if (Platform.isAndroid) {
+    late final LocationSettings settings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
       settings = AndroidSettings(
         accuracy: LocationAccuracy.best,
         distanceFilter: 0,
         intervalDuration: Duration.zero,
       );
-    } else if (Platform.isIOS || Platform.isMacOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+               defaultTargetPlatform == TargetPlatform.macOS) {
       settings = AppleSettings(
         accuracy: LocationAccuracy.best,
         distanceFilter: 0,
@@ -113,7 +113,6 @@ class GpsService extends ChangeNotifier with WidgetsBindingObserver {
         distanceFilter: 0,
       );
     }
-
     _positionSub = Geolocator.getPositionStream(locationSettings: settings)
         .listen((position) {
       _lastPosition = position;

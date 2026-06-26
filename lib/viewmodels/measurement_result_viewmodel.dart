@@ -24,13 +24,12 @@ class MeasurementResultViewModel extends ChangeNotifier {
 
   String? _saveError;
   String? _shareError;
-  bool _isVehicleExpanded = false;
+  final vehicleExpandedNotifier = ValueNotifier<bool>(false);
 
   Measurement get measurement => _measurement;
   List<HpPoint> get hpValues => _hpValues;
   String? get saveError => _saveError;
   String? get shareError => _shareError;
-  bool get isVehicleExpanded => _isVehicleExpanded;
   bool get hasPendingChanges => _pendingMemo != _measurement.memo;
 
   void clearSaveError() {
@@ -42,8 +41,13 @@ class MeasurementResultViewModel extends ChangeNotifier {
   }
 
   void toggleVehicleExpanded() {
-    _isVehicleExpanded = !_isVehicleExpanded;
-    notifyListeners();
+    vehicleExpandedNotifier.value = !vehicleExpandedNotifier.value;
+  }
+
+  @override
+  void dispose() {
+    vehicleExpandedNotifier.dispose();
+    super.dispose();
   }
 
   void updatePendingMemo(String text) {

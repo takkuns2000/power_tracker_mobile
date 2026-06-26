@@ -13,12 +13,14 @@ class GlassCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.borderRadius = 8.0,
     this.leftBorderColor,
+    this.fillHeight = false,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double borderRadius;
   final Color? leftBorderColor;
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -37,18 +39,32 @@ class GlassCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (leftBorderColor != null)
-                      Container(width: 4, color: leftBorderColor),
-                    Expanded(
-                      child: Padding(padding: padding, child: child),
-                    ),
-                  ],
+              if (fillHeight)
+                Positioned.fill(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (leftBorderColor != null)
+                        Container(width: 4, color: leftBorderColor),
+                      Expanded(
+                        child: Padding(padding: padding, child: child),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (leftBorderColor != null)
+                        Container(width: 4, color: leftBorderColor),
+                      Expanded(
+                        child: Padding(padding: padding, child: child),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               // CSS inset 0 0 10px rgba(255,179,177,0.1) の近似
               Positioned.fill(
                 child: IgnorePointer(

@@ -16,10 +16,12 @@ class RecordsViewModel extends ChangeNotifier {
   List<Measurement> _records = [];
   bool _isLoading = false;
   String? _loadError;
+  String? _deleteError;
 
   List<Measurement> get records => List.unmodifiable(_records);
   bool get isLoading => _isLoading;
   String? get loadError => _loadError;
+  String? get deleteError => _deleteError;
 
   MeasurementResultViewModel createResultViewModel(Measurement m) {
     return MeasurementResultViewModel(_repository, m);
@@ -31,6 +33,21 @@ class RecordsViewModel extends ChangeNotifier {
 
   void clearLoadError() {
     _loadError = null;
+  }
+
+  void clearDeleteError() {
+    _deleteError = null;
+  }
+
+  Future<void> delete(int id) async {
+    try {
+      await _repository.delete(id);
+      _records = _records.where((r) => r.id != id).toList();
+    } catch (e) {
+      debugPrint('[RecordsViewModel] delete error: $e');
+      _deleteError = '記録の削除に失敗しました。';
+    }
+    notifyListeners();
   }
 
   Future<void> load() async {

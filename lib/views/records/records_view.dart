@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../../app_theme.dart';
 import '../../models/measurement.dart';
 import '../../viewmodels/records_viewmodel.dart';
 import '../measurement/measurement_result_view.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class RecordsView extends StatelessWidget {
@@ -38,27 +40,49 @@ class RecordsView extends StatelessWidget {
           ),
         );
       }
+      if (vm.deleteError != null) {
+        final error = vm.deleteError!;
+        vm.clearDeleteError();
+        showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(l10n.deleteRecord,
+                style: AppTextStyles.headlineLg(context)
+                    .copyWith(color: AppColors.error)),
+            content: Text(error),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
+        );
+      }
     });
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
-      appBar: _HistoryAppBar(onRefresh: vm.load),
+      appBar: _HistoryAppBar(),
       body: SafeArea(
         child: vm.isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: AppColors.primary))
             : vm.records.isEmpty
                 ? _EmptyState()
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SummarySection(records: vm.records),
-                        const SizedBox(height: 24),
-                        ..._buildRecordList(context, vm.records),
-                      ],
+                : SlidableAutoCloseBehavior(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _SummarySection(records: vm.records),
+                          const SizedBox(height: 24),
+                          ..._buildRecordList(context, vm.records),
+                        ],
+                      ),
                     ),
                   ),
       ),
@@ -67,6 +91,7 @@ class RecordsView extends StatelessWidget {
 
   List<Widget> _buildRecordList(
       BuildContext context, List<Measurement> records) {
+    final l10n = AppLocalizations.of(context)!;
     final widgets = <Widget>[];
     String? lastMonth;
 
@@ -77,7 +102,7 @@ class RecordsView extends StatelessWidget {
         widgets.add(_MonthSeparator(label: month));
         lastMonth = month;
       }
-      widgets.add(_RecordCard(
+      final card = _RecordCard(
         measurement: record,
         onTap: () async {
           await Navigator.of(context).push(
@@ -91,15 +116,65 @@ class RecordsView extends StatelessWidget {
           );
           if (context.mounted) context.read<RecordsViewModel>().load();
         },
-      ));
+      );
+
+      if (record.id == null) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: card,
+        ));
+        continue;
+      }
+
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Slidable(
+        key: ValueKey(record.id),
+        groupTag: 'records',
+        endActionPane: ActionPane(
+          motion: const DrawerMotion(),
+          extentRatio: 0.22,
+          children: [
+            SlidableAction(
+              onPressed: (_) async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  barrierColor: Colors.black.withValues(alpha: 0.6),
+                  builder: (ctx) => ConfirmDialog(
+                    icon: Icons.delete_outline,
+                    title: l10n.deleteRecord,
+                    content: Text(l10n.deleteRecordConfirm),
+                    actions: [
+                      ConfirmDialogButton(
+                        label: l10n.cancel,
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                      ),
+                    ],
+                    okLabel: l10n.delete,
+                    onOk: () => Navigator.of(ctx).pop(true),
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  context.read<RecordsViewModel>().delete(record.id!);
+                }
+              },
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: Icons.delete_outline,
+              label: 'DELETE',
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ],
+        ),
+        child: card,
+      )));
     }
     return widgets;
   }
 }
 
 class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _HistoryAppBar({required this.onRefresh});
-  final VoidCallback onRefresh;
+  const _HistoryAppBar();
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -125,34 +200,16 @@ class _HistoryAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.show_chart,
-                        color: AppColors.primary, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.navHistory,
-                      style: GoogleFonts.sora(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: onRefresh,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.refresh,
-                        color: AppColors.onSurfaceVariant, size: 20),
+                const Icon(Icons.show_chart,
+                    color: AppColors.primary, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.navHistory,
+                  style: GoogleFonts.sora(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
@@ -250,9 +307,7 @@ class _RecordCard extends StatelessWidget {
         '${m.measuredAt.year}.${m.measuredAt.month.toString().padLeft(2, '0')}.${m.measuredAt.day.toString().padLeft(2, '0')} '
         '${m.measuredAt.hour.toString().padLeft(2, '0')}:${m.measuredAt.minute.toString().padLeft(2, '0')}';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
+    return GestureDetector(
         onTap: onTap,
         child: GlassCard(
           padding: const EdgeInsets.all(20),
@@ -323,8 +378,7 @@ class _RecordCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
