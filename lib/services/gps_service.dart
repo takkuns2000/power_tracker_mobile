@@ -105,6 +105,7 @@ class GpsService extends ChangeNotifier with WidgetsBindingObserver {
         accuracy: LocationAccuracy.best,
         distanceFilter: 0,
         activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
       );
     } else {
       settings = const LocationSettings(

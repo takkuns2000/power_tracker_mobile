@@ -5,6 +5,15 @@
 See [README.md](README.md) for project overview.
 Specs: [docs/requirements_specification.md](docs/requirements_specification.md), [docs/basic_specification.md](docs/basic_specification.md), [docs/data_specification.md](docs/data_specification.md), [docs/design_specification.md](docs/design_specification.md)
 
+## ドキュメント更新
+
+**実装が完了したら、対応する `docs/features/` のドキュメントを必ず更新すること。**
+
+更新対象の例：
+- タイムアウト・閾値などの数値変更 → 仕様値を最新化
+- 新しい設定・挙動の追加 → 「実装メモ」セクションに追記
+- API・クラス設計の変更 → 関連サービス・ViewModel の記載を修正
+
 ## Testing
 
 - テスト種別：ユニットテスト（ViewModel・Repository のロジック）。Widget テストは書かない

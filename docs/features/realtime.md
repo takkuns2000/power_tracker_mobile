@@ -36,7 +36,7 @@ GPS の隣接 2 点間から瞬時出力を算出する。計算式の詳細は 
 
 ### GPS タイムアウト
 
-最後の GPS 更新から 3 秒以上経過すると `isGpsActive = false` になりインジケータが赤に変わる。
+最後の GPS 更新から 5 秒以上経過すると `isGpsActive = false` になりインジケータが赤に変わる。
 
 ### ゲージ表示
 
@@ -82,7 +82,7 @@ PE  = m × g × Δh / η   ← ke2 と同様、η でエンジン側に換算
 - `RealtimeViewModel` が `GpsService` のストリームを購読し、GPS 更新ごとに `PsCalculatorService` で瞬時 PS を算出
 - `VehicleSelectionViewModel` から選択車両（重量・駆動方式）を取得して計算に反映
 - GPS 更新頻度（Hz）と信号品質をセグメントゲージで可視化
-- 信号喪失（3秒タイムアウト）で `isGpsActive = false` → インジケータが赤に変化
+- 信号喪失（5秒タイムアウト）で `isGpsActive = false` → インジケータが赤に変化
 
 ### GPS権限フロー（実装済み）
 
@@ -101,4 +101,16 @@ PE  = m × g × Δh / η   ← ke2 と同様、η でエンジン側に換算
 
 - GPSから取得するデータ：`Position.speed`（m/s）、`Position.timestamp`
 - 加速度は呼び出し側で `a = Δv/Δt` として算出する（GPSは加速度を直接提供しない）
-- 更新頻度はハードウェア依存。`distanceFilter: 0` でフィルターなしの全更新を受け取る
+- 更新頻度はハードウェア依存。プラットフォーム別設定でハードウェア最速を要求する
+
+### GPS 更新頻度の設定
+
+`GpsService._startStream()` でプラットフォームごとに最適な設定を使用する：
+
+| プラットフォーム | 設定クラス | ポイント |
+|----------------|-----------|---------|
+| Android | `AndroidSettings` | `intervalDuration: Duration.zero` でハードウェア最速を要求。FusedLocationProvider が上限でクランプするためエラーは起きない |
+| iOS / macOS | `AppleSettings` | `activityType: automotiveNavigation`・`pauseLocationUpdatesAutomatically: false` で車載モード・自動停止なし |
+| その他 | `LocationSettings` | デフォルト設定（`distanceFilter: 0`） |
+
+汎用 `LocationSettings`（`intervalDuration` 未指定）を使うと Android では **デフォルト 5000ms = 0.2Hz 固定**になるため使用禁止。

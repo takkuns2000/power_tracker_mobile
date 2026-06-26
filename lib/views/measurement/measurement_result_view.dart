@@ -288,7 +288,7 @@ class _PeakHpSection extends StatelessWidget {
 
 class _ChartCard extends StatelessWidget {
   const _ChartCard({required this.hpValues});
-  final List<double> hpValues;
+  final List<HpPoint> hpValues;
 
   @override
   Widget build(BuildContext context) {
@@ -363,7 +363,7 @@ class _ChartCard extends StatelessWidget {
 
 class _HpChartPainter extends CustomPainter {
   const _HpChartPainter({required this.hpValues});
-  final List<double> hpValues;
+  final List<HpPoint> hpValues;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -380,8 +380,12 @@ class _HpChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final maxHp = hpValues.reduce((a, b) => a > b ? a : b);
+    final maxHp = hpValues.map((p) => p.ps).reduce((a, b) => a > b ? a : b);
     if (maxHp <= 0) return;
+
+    final firstMs = hpValues.first.offsetMs;
+    final totalMs = (hpValues.last.offsetMs - firstMs).toDouble();
+    if (totalMs <= 0) return;
 
     final hpPaint = Paint()
       ..color = AppColors.primary
@@ -391,8 +395,8 @@ class _HpChartPainter extends CustomPainter {
 
     final path = Path();
     for (var i = 0; i < hpValues.length; i++) {
-      final x = size.width * i / (hpValues.length - 1);
-      final y = size.height * (1 - hpValues[i] / maxHp);
+      final x = size.width * (hpValues[i].offsetMs - firstMs) / totalMs;
+      final y = size.height * (1 - hpValues[i].ps / maxHp);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -401,8 +405,9 @@ class _HpChartPainter extends CustomPainter {
     }
     canvas.drawPath(path, hpPaint);
 
-    final peakIndex = hpValues.indexOf(maxHp);
-    final peakX = size.width * peakIndex / (hpValues.length - 1);
+    final peakIndex = hpValues.indexWhere((p) => p.ps == maxHp);
+    final peakX =
+        size.width * (hpValues[peakIndex].offsetMs - firstMs) / totalMs;
     canvas.drawCircle(
         Offset(peakX, 0), 5, Paint()..color = AppColors.primary);
   }
