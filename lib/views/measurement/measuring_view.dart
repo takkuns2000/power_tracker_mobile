@@ -40,7 +40,6 @@ class MeasuringView extends StatelessWidget {
       appBar: _MeasuringAppBar(),
       body: Stack(
         children: [
-          _SpeedStreaks(),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -150,43 +149,6 @@ class _MeasuringAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class _SpeedStreaks extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const Positioned.fill(
-      child: IgnorePointer(
-        child: CustomPaint(painter: _StreakPainter()),
-      ),
-    );
-  }
-}
-
-class _StreakPainter extends CustomPainter {
-  const _StreakPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.transparent,
-          AppColors.primary.withValues(alpha: 0.25),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, 2, size.height))
-      ..strokeWidth = 1;
-
-    for (final xFraction in [0.15, 0.25, 0.45, 0.75, 0.85]) {
-      final x = size.width * xFraction;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _StatusCard extends StatelessWidget {
   const _StatusCard({required this.startTime});

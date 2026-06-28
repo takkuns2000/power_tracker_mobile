@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +37,8 @@ class VehicleSettingsView extends StatelessWidget {
                     _BasicInfoModule(vm: vm),
                     const SizedBox(height: 16),
                     _DrivetrainModule(vm: vm),
+                    const SizedBox(height: 16),
+                    _PhotoModule(vm: vm),
                     const SizedBox(height: 16),
                     ProLockWrapper(
                       isPro: isPro,
@@ -436,6 +439,94 @@ class _DrivetrainPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DrivetrainPainter old) =>
       drivetrain != old.drivetrain || isActive != old.isActive;
+}
+
+class _PhotoModule extends StatelessWidget {
+  const _PhotoModule({required this.vm});
+  final VehicleSettingsViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final imagePath = vm.imagePath;
+    return GlassCard(
+      leftBorderColor: AppColors.onSurfaceVariant,
+      child: GestureDetector(
+        onTap: () async {
+          await vm.pickImage();
+          if (!context.mounted) return;
+          if (vm.imagePickError != null) {
+            showConfirmDialog<void>(
+              context: context,
+              icon: Icons.error_outline,
+              title: 'エラー',
+              content: const Text('写真の読み込みに失敗しました。'),
+              okLabel: '閉じる',
+            );
+            vm.clearImagePickError();
+          }
+        },
+        child: imagePath != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(imagePath),
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth,
+                  errorBuilder: (_, _, _) => AspectRatio(
+                    aspectRatio: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.outline.withValues(alpha: 0.3),
+                          style: BorderStyle.solid,
+                          width: 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+                        size: 36,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : AspectRatio(
+                aspectRatio: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.outline.withValues(alpha: 0.3),
+                      style: BorderStyle.solid,
+                      width: 1,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+                        size: 36,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'PHOTO',
+                      style: AppTextStyles.labelCaps(context).copyWith(
+                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+      ),
+    );
+  }
 }
 
 // ProLockWrapper は lib/views/widgets/pro_lock_wrapper.dart に移動済み

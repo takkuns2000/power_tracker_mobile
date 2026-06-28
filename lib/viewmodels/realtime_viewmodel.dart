@@ -111,7 +111,10 @@ class RealtimeViewModel extends ChangeNotifier {
     }
   }
 
-  void _onVehiclesChanged() => _initDefaultIfNeeded();
+  void _onVehiclesChanged() {
+    _initDefaultIfNeeded();
+    _vehicleSelection.reloadSelectedVehicle(_garageVm.vehicles);
+  }
 
   void _initDefaultIfNeeded() {
     if (_vehicleSelection.vehicleId != null) return;

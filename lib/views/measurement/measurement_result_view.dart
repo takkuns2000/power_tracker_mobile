@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
@@ -515,29 +516,49 @@ class _VehicleCard extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.measuredVehicle,
-                          style: AppTextStyles.labelCaps(context)
-                              .copyWith(color: AppColors.primary)),
-                      const SizedBox(height: 4),
-                      Text(measurement.vehicleName,
-                          style: AppTextStyles.headlineLg(context)),
-                      const SizedBox(height: 2),
-                      Text(
-                          '${l10n.vehicleDetailWeight}: ${measurement.vehicleWeightKg.toStringAsFixed(0)} kg',
-                          style: AppTextStyles.labelCaps(context)
-                              .copyWith(color: AppColors.onSurfaceVariant)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.measuredVehicle,
+                                style: AppTextStyles.labelCaps(context)
+                                    .copyWith(color: AppColors.primary)),
+                            const SizedBox(height: 4),
+                            Text(measurement.vehicleName,
+                                style: AppTextStyles.headlineLg(context)),
+                            const SizedBox(height: 2),
+                            Text(
+                                '${l10n.vehicleDetailWeight}: ${measurement.vehicleWeightKg.toStringAsFixed(0)} kg',
+                                style: AppTextStyles.labelCaps(context)
+                                    .copyWith(color: AppColors.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: AppColors.primary,
+                      ),
                     ],
                   ),
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.primary,
-                  ),
+                  if (v.imagePath != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.file(
+                        File(v.imagePath!),
+                        width: double.infinity,
+                        fit: BoxFit.fitWidth,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
