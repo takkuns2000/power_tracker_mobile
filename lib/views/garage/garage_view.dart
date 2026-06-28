@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:horsepower_tracker_mobile/l10n/app_localizations.dart';
@@ -291,25 +292,48 @@ class _VehicleCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.outline.withValues(alpha: 0.1),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.directions_car,
-                        color:
-                            AppColors.onSurfaceVariant.withValues(alpha: 0.2),
-                        size: 48),
-                  ],
-                ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: vehicle.imagePath != null
+                    ? Image.file(
+                        File(vehicle.imagePath!),
+                        width: double.infinity,
+                        fit: BoxFit.fitWidth,
+                        errorBuilder: (_, _, _) => AspectRatio(
+                          aspectRatio: 3,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface.withValues(alpha: 0.5),
+                              border: Border.all(
+                                color: AppColors.outline.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.directions_car,
+                              color: AppColors.onSurfaceVariant.withValues(alpha: 0.2),
+                              size: 48,
+                            ),
+                          ),
+                        ),
+                      )
+                    : AspectRatio(
+                        aspectRatio: 3,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.surface.withValues(alpha: 0.5),
+                            border: Border.all(
+                              color: AppColors.outline.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.directions_car,
+                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.2),
+                            size: 48,
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),

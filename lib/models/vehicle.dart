@@ -20,6 +20,7 @@ abstract class Vehicle with _$Vehicle {
     String? memo,
     TireSize? tireSize,
     @Default([]) List<GearRatio> gearRatios,
+    String? imagePath,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default(false) bool isDeleted,

@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../models/drivetrain.dart';
 import '../models/gear_ratio.dart';
 import '../models/tire_size.dart';
@@ -36,6 +42,8 @@ class VehicleSettingsViewModel extends ChangeNotifier {
       return TextEditingController(text: gear?.ratio.toString() ?? '');
     });
     _drivetrain = vehicle?.drivetrain ?? Drivetrain.fwd;
+    _imagePath = vehicle?.imagePath;
+    _originalImagePath = vehicle?.imagePath;
   }
 
   final VehicleRepository _repository;
@@ -62,6 +70,74 @@ class VehicleSettingsViewModel extends ChangeNotifier {
   bool get isSaving => _isSaving;
 
   bool get isEditing => _editingVehicle != null;
+
+  String? _imagePath;
+  String? _originalImagePath;
+  String? get imagePath => _imagePath;
+
+  String? _imagePickError;
+  String? get imagePickError => _imagePickError;
+  void clearImagePickError() {
+    _imagePickError = null;
+  }
+
+  Future<void> pickImage() async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        imageQuality: 90,
+      );
+      if (picked == null) return;
+
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 3, ratioY: 1),
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 85,
+        maxWidth: 1080,
+        maxHeight: 360,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: '写真を切り抜く',
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: '写真を切り抜く',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+      if (cropped == null) return;
+
+      final dir = await getApplicationDocumentsDirectory();
+      final destDir = Directory(p.join(dir.path, 'vehicle_images'));
+      if (!await destDir.exists()) await destDir.create(recursive: true);
+
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final dest = p.join(destDir.path, fileName);
+      await File(cropped.path).copy(dest);
+
+      if (_imagePath != null && _imagePath != _originalImagePath) {
+        await _deleteFile(_imagePath!);
+      }
+
+      _imagePath = dest;
+    } catch (e) {
+      debugPrint('[VehicleSettingsViewModel] pickImage error: $e');
+      _imagePickError = e.toString();
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> _deleteFile(String path) async {
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
 
   void selectDrivetrain(Drivetrain value) {
     _drivetrain = value;
@@ -140,6 +216,7 @@ class VehicleSettingsViewModel extends ChangeNotifier {
           memo: memo,
           tireSize: tireSize,
           gearRatios: gearRatios,
+          imagePath: _imagePath,
           createdAt: now,
           updatedAt: now,
         ));
@@ -153,9 +230,15 @@ class VehicleSettingsViewModel extends ChangeNotifier {
           memo: memo,
           tireSize: tireSize,
           gearRatios: gearRatios,
+          imagePath: _imagePath,
           updatedAt: DateTime.now(),
         ));
+        // 編集時に画像を差し替えた場合、古いファイルを削除
+        if (_originalImagePath != null && _originalImagePath != _imagePath) {
+          await _deleteFile(_originalImagePath!);
+        }
       }
+      _originalImagePath = _imagePath;
       debugPrint('[VehicleSettingsViewModel] save done');
       return true;
     } catch (e) {
@@ -180,6 +263,10 @@ class VehicleSettingsViewModel extends ChangeNotifier {
     finalGearController.dispose();
     for (final c in gearControllers) {
       c.dispose();
+    }
+    // 保存されずに閉じた場合、未保存の選択画像を削除
+    if (_imagePath != null && _imagePath != _originalImagePath) {
+      _deleteFile(_imagePath!);
     }
     super.dispose();
   }
