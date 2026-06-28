@@ -39,3 +39,26 @@ Spec: [basic_specification.md](../basic_specification.md) § 2-6, 2-7, 4
 
 - `drivetrain` を `Drivetrain? → @Default(Drivetrain.fwd) Drivetrain` に変更（未設定による計算エラーを防止）
 - `@freezed abstract class` 構文（freezed v3 対応）
+- `imagePath: String?` フィールド追加（車両写真のローカルファイルパス）
+
+### 車両写真機能
+
+**写真選択フロー（`VehicleSettingsViewModel.pickImage()`）**
+1. `image_picker` でギャラリーから選択（maxWidth: 1920, quality: 90）
+2. `image_cropper` で3:1比率にクロップ（maxWidth: 1080, maxHeight: 360, quality: 85）
+3. `Documents/vehicle_images/{timestamp}.jpg` にコピー保存
+
+**ファイル管理**
+- 写真を差し替えた場合：古い一時ファイルを削除
+- 保存せずに画面を閉じた場合：未保存の選択ファイルを `dispose()` で削除
+- 車両保存時に旧パスのファイルを削除
+
+**UI（`_PhotoModule` in vehicle_settings_view.dart）**
+- `GlassCard` + `GestureDetector` でタップ選択
+- 画像表示: `BoxFit.fitWidth`（横幅いっぱい、縦は自然サイズ）
+- プレースホルダー: `AspectRatio(3:1)` + `add_photo_alternate_outlined` アイコン
+- `errorBuilder` でファイル不在時はプレースホルダー表示（クラッシュ防止）
+- ガレージ一覧・計測結果カードにも同様の表示を適用
+
+**写真はフリー機能**
+- `ProLockWrapper` の外に配置（タイヤ・ギア設定と異なりフリーで使用可）
