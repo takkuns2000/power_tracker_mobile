@@ -17,9 +17,8 @@ class DatabaseService {
     debugPrint('[DatabaseService] db path: $dbPath');
     _db = await openDatabase(
       dbPath,
-      version: 2,
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
     debugPrint('[DatabaseService] initialize done');
   }
@@ -86,14 +85,6 @@ class DatabaseService {
         FOREIGN KEY (measurement_id) REFERENCES measurements(id)
       )
     ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute(
-        'ALTER TABLE vehicles ADD COLUMN image_path TEXT',
-      );
-    }
   }
 
   void dispose() {
