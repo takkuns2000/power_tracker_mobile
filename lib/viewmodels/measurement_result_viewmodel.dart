@@ -25,6 +25,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
   String? _saveError;
   String? _shareError;
   final vehicleExpandedNotifier = ValueNotifier<bool>(false);
+  final selectedPointNotifier = ValueNotifier<HpPoint?>(null);
 
   Measurement get measurement => _measurement;
   List<HpPoint> get hpValues => _hpValues;
@@ -44,9 +45,14 @@ class MeasurementResultViewModel extends ChangeNotifier {
     vehicleExpandedNotifier.value = !vehicleExpandedNotifier.value;
   }
 
+  void selectChartPoint(HpPoint? point) {
+    selectedPointNotifier.value = point;
+  }
+
   @override
   void dispose() {
     vehicleExpandedNotifier.dispose();
+    selectedPointNotifier.dispose();
     super.dispose();
   }
 

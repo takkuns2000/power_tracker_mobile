@@ -97,7 +97,7 @@ class _MeasurementResultBody extends StatelessWidget {
               const SizedBox(height: 8),
               _PeakHpSection(maxHp: m.maxHp),
               const SizedBox(height: 24),
-              _ChartCard(hpValues: vm.hpValues),
+              _ChartCard(hpValues: vm.hpValues, isPro: isPro),
               const SizedBox(height: 16),
               _ProBento(isPro: isPro),
               const SizedBox(height: 16),
@@ -287,13 +287,26 @@ class _PeakHpSection extends StatelessWidget {
   }
 }
 
+HpPoint _findNearestPoint(
+    double tapX, double chartWidth, List<HpPoint> points) {
+  final firstMs = points.first.offsetMs;
+  final totalMs = points.last.offsetMs - firstMs;
+  return points.reduce((a, b) {
+    final ax = chartWidth * (a.offsetMs - firstMs) / totalMs;
+    final bx = chartWidth * (b.offsetMs - firstMs) / totalMs;
+    return (tapX - ax).abs() < (tapX - bx).abs() ? a : b;
+  });
+}
+
 class _ChartCard extends StatelessWidget {
-  const _ChartCard({required this.hpValues});
+  const _ChartCard({required this.hpValues, required this.isPro});
   final List<HpPoint> hpValues;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final vm = context.read<MeasurementResultViewModel>();
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,9 +361,71 @@ class _ChartCard extends StatelessWidget {
                         style: AppTextStyles.labelCaps(context)
                             .copyWith(color: AppColors.onSurfaceVariant)),
                   )
-                : CustomPaint(
-                    painter: _HpChartPainter(hpValues: hpValues),
-                    child: const SizedBox.expand(),
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      return ValueListenableBuilder<HpPoint?>(
+                        valueListenable: vm.selectedPointNotifier,
+                        builder: (context, selectedPoint, _) {
+                          final firstMs = hpValues.first.offsetMs;
+                          final totalMs =
+                              (hpValues.last.offsetMs - firstMs).toDouble();
+                          final maxHp = hpValues
+                              .map((p) => p.ps)
+                              .reduce((a, b) => a > b ? a : b);
+                          Positioned? tooltip;
+                          if (selectedPoint != null) {
+                            final xFrac = totalMs > 0
+                                ? (selectedPoint.offsetMs - firstMs) / totalMs
+                                : 0.0;
+                            const cardWidth = 88.0;
+                            final left =
+                                (constraints.maxWidth * xFrac - cardWidth / 2)
+                                    .clamp(0.0, constraints.maxWidth - cardWidth);
+                            final pointY = constraints.maxHeight *
+                                (1 - selectedPoint.ps / maxHp);
+                            final cardHeight = isPro ? 72.0 : 52.0;
+                            final showBelow =
+                                pointY < constraints.maxHeight / 2;
+                            final top = showBelow
+                                ? (pointY + 24).clamp(
+                                    0.0, constraints.maxHeight - cardHeight)
+                                : (pointY - cardHeight - 24).clamp(
+                                    0.0, constraints.maxHeight - cardHeight);
+                            tooltip = Positioned(
+                              left: left,
+                              top: top,
+                              child: _ChartTooltipContent(
+                                  point: selectedPoint,
+                                  firstMs: firstMs,
+                                  isPro: isPro),
+                            );
+                          }
+                          return GestureDetector(
+                            onTapDown: (details) {
+                              final point = _findNearestPoint(
+                                details.localPosition.dx,
+                                constraints.maxWidth,
+                                hpValues,
+                              );
+                              vm.selectChartPoint(point);
+                            },
+                            onTapCancel: () => vm.selectChartPoint(null),
+                            child: Stack(
+                              children: [
+                                CustomPaint(
+                                  painter: _HpChartPainter(
+                                    hpValues: hpValues,
+                                    selectedPoint: selectedPoint,
+                                  ),
+                                  child: const SizedBox.expand(),
+                                ),
+                                if (tooltip != null) tooltip,
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
           ),
           const SizedBox(height: 8),
@@ -362,9 +437,63 @@ class _ChartCard extends StatelessWidget {
   }
 }
 
+class _ChartTooltipContent extends StatelessWidget {
+  const _ChartTooltipContent({
+    required this.point,
+    required this.firstMs,
+    required this.isPro,
+  });
+  final HpPoint point;
+  final int firstMs;
+  final bool isPro;
+
+  @override
+  Widget build(BuildContext context) {
+    final elapsedSec = (point.offsetMs - firstMs) / 1000.0;
+    return Container(
+      width: 88,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${point.ps.toStringAsFixed(1)} PS',
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (isPro) ...[
+            const SizedBox(height: 2),
+            // TODO: トルク計算実装後に実値を表示する（現在は未実装のため '--' 表示）
+            const Text(
+              '-- Nm',
+              style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 11),
+            ),
+          ],
+          const SizedBox(height: 2),
+          Text(
+            '${elapsedSec.toStringAsFixed(1)} 秒',
+            style: const TextStyle(
+                color: AppColors.onSurfaceVariant, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HpChartPainter extends CustomPainter {
-  const _HpChartPainter({required this.hpValues});
+  const _HpChartPainter({required this.hpValues, this.selectedPoint});
   final List<HpPoint> hpValues;
+  final HpPoint? selectedPoint;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -411,10 +540,23 @@ class _HpChartPainter extends CustomPainter {
         size.width * (hpValues[peakIndex].offsetMs - firstMs) / totalMs;
     canvas.drawCircle(
         Offset(peakX, 0), 5, Paint()..color = AppColors.primary);
+
+    if (selectedPoint != null) {
+      final selX =
+          size.width * (selectedPoint!.offsetMs - firstMs) / totalMs;
+      canvas.drawLine(
+        Offset(selX, 0),
+        Offset(selX, size.height),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.3)
+          ..strokeWidth = 1,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(_HpChartPainter old) => hpValues != old.hpValues;
+  bool shouldRepaint(_HpChartPainter old) =>
+      hpValues != old.hpValues || selectedPoint != old.selectedPoint;
 }
 
 class _ProBento extends StatelessWidget {
