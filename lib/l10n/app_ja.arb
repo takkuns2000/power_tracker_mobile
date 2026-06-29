@@ -7,7 +7,7 @@
   "unitCc": "CC",
   "unitPs": "PS",
   "unitKgm": "kgm",
-  "unitHp": "HP",
+  "unitHp": "PS",
   "unitKmh": "km/h",
   "unitSeconds": "秒",
 
@@ -75,8 +75,8 @@
 
   "measurementResult": "計測結果",
   "measurementDateTime": "計測日時",
-  "peakPowerReached": "最高出力到達",
-  "chartPowerHp": "馬力 (HP)",
+  "peakPowerReached": "最高出力",
+  "chartPowerHp": "馬力 (PS)",
   "chartRpmX1000": "RPM x1000",
   "chartRpmAxis": "回転数軸",
   "chartTimeElapsed": "時間経過 (s)",
@@ -108,8 +108,8 @@
   "lifetimeRuns": "Lifetime Runs",
   "records": "Records",
   "peakStats": "Peak Stats",
-  "maxHp": "MAX HP",
-  "trendNeutral": "-- HP",
+  "maxHp": "MAX PS",
+  "trendNeutral": "-- PS",
   "ecuSyncDescription": "Synchronize with ECU to import historical dyno data automatically.",
 
   "latitude": "LATITUDE",
@@ -132,5 +132,9 @@
   "cancel": "キャンセル",
   "deleteRecord": "記録を削除",
   "deleteRecordConfirm": "この計測記録を削除しますか？削除したデータは復元できません。",
-  "deleteRecordError": "記録の削除に失敗しました。"
+  "deleteRecordError": "記録の削除に失敗しました。",
+
+  "unsavedChangesTitle": "入力内容が保存されていません。",
+  "unsavedChangesMessage": "破棄して閉じますか？",
+  "discardChanges": "破棄する"
 }

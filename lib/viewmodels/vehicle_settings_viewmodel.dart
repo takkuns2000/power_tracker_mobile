@@ -81,6 +81,45 @@ class VehicleSettingsViewModel extends ChangeNotifier {
     _imagePickError = null;
   }
 
+  bool get hasPendingChanges {
+    if (_editingVehicle == null) {
+      return nameController.text.trim().isNotEmpty ||
+          weightController.text.trim().isNotEmpty;
+    }
+    final v = _editingVehicle;
+    if (_imagePath != _originalImagePath) return true;
+    if (_drivetrain != v.drivetrain) return true;
+    if (nameController.text != v.name) return true;
+    if (modelCodeController.text != (v.modelCode ?? '')) return true;
+    if (weightController.text != v.weightKg.toString()) return true;
+    if (displacementController.text != (v.displacementCc?.toString() ?? '')) {
+      return true;
+    }
+    if (memoController.text != (v.memo ?? '')) return true;
+    if (tireWidthController.text != (v.tireSize?.widthMm.toString() ?? '')) {
+      return true;
+    }
+    if (tireAspectController.text !=
+        (v.tireSize?.aspectRatio.toString() ?? '')) {
+      return true;
+    }
+    if (tireRimController.text != (v.tireSize?.rimInch.toString() ?? '')) {
+      return true;
+    }
+    final origFinalGear = v.finalGearRatio;
+    if (finalGearController.text != (origFinalGear?.ratio.toString() ?? '')) {
+      return true;
+    }
+    for (var i = 0; i < gearControllers.length; i++) {
+      final orig =
+          v.transmissionGears.where((g) => g.gearNumber == i + 1).firstOrNull;
+      if (gearControllers[i].text != (orig?.ratio.toString() ?? '')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> pickImage() async {
     try {
       final picked = await ImagePicker().pickImage(

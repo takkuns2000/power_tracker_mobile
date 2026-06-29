@@ -133,7 +133,7 @@ abstract class AppLocalizations {
   /// No description provided for @unitHp.
   ///
   /// In ja, this message translates to:
-  /// **'HP'**
+  /// **'PS'**
   String get unitHp;
 
   /// No description provided for @unitKmh.
@@ -505,13 +505,13 @@ abstract class AppLocalizations {
   /// No description provided for @peakPowerReached.
   ///
   /// In ja, this message translates to:
-  /// **'最高出力到達'**
+  /// **'最高出力'**
   String get peakPowerReached;
 
   /// No description provided for @chartPowerHp.
   ///
   /// In ja, this message translates to:
-  /// **'馬力 (HP)'**
+  /// **'馬力 (PS)'**
   String get chartPowerHp;
 
   /// No description provided for @chartRpmX1000.
@@ -697,13 +697,13 @@ abstract class AppLocalizations {
   /// No description provided for @maxHp.
   ///
   /// In ja, this message translates to:
-  /// **'MAX HP'**
+  /// **'MAX PS'**
   String get maxHp;
 
   /// No description provided for @trendNeutral.
   ///
   /// In ja, this message translates to:
-  /// **'-- HP'**
+  /// **'-- PS'**
   String get trendNeutral;
 
   /// No description provided for @ecuSyncDescription.
@@ -819,6 +819,24 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'記録の削除に失敗しました。'**
   String get deleteRecordError;
+
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'入力内容が保存されていません。'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'破棄して閉じますか？'**
+  String get unsavedChangesMessage;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In ja, this message translates to:
+  /// **'破棄する'**
+  String get discardChanges;
 }
 
 class _AppLocalizationsDelegate
