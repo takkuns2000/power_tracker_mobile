@@ -110,7 +110,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
 
   Future<void> tweetImage(Rect origin) async {
     final text =
-        '${_measurement.vehicleName} — ${_measurement.maxHp.toStringAsFixed(1)} HP 計測しました！ #HorsepowerTracker';
+        '${_measurement.vehicleName} — ${_measurement.maxHp.toStringAsFixed(1)} PS 計測しました！ #HorsepowerTracker';
     String? err;
     try {
       final file = await _createShareImage(_measurement);
@@ -196,7 +196,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
       weight: FontWeight.w800,
       italic: true,
     );
-    drawText('HP', 48, 280,
+    drawText('PS', 48, 280,
         fontSize: 48,
         color: primary.withValues(alpha: 0.7),
         weight: FontWeight.w700);

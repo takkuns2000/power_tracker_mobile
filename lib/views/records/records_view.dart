@@ -302,6 +302,7 @@ class _RecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final m = measurement;
     final date =
         '${m.measuredAt.year}.${m.measuredAt.month.toString().padLeft(2, '0')}.${m.measuredAt.day.toString().padLeft(2, '0')} '
@@ -364,7 +365,7 @@ class _RecordCard extends StatelessWidget {
                         ),
                       ),
                       TextSpan(
-                        text: ' HP',
+                        text: ' ${l10n.unitPs}',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,

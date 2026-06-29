@@ -24,7 +24,32 @@ class VehicleSettingsView extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: AppColors.background,
-      appBar: _VehicleSettingsAppBar(),
+      appBar: _VehicleSettingsAppBar(
+        onClose: () async {
+          if (vm.hasPendingChanges) {
+            final discard = await showDialog<bool>(
+              context: context,
+              barrierColor: Colors.black.withValues(alpha: 0.6),
+              builder: (ctx) => ConfirmDialog(
+                icon: Icons.warning_amber_outlined,
+                title: l10n.unsavedChangesTitle,
+                content: Text(l10n.unsavedChangesMessage),
+                actions: [
+                  ConfirmDialogButton(
+                    label: l10n.cancel,
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                  ),
+                ],
+                okLabel: l10n.discardChanges,
+                onOk: () => Navigator.of(ctx).pop(true),
+              ),
+            );
+            if (!context.mounted) return;
+            if (discard != true) return;
+          }
+          Navigator.of(context).pop();
+        },
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -81,6 +106,9 @@ class VehicleSettingsView extends StatelessWidget {
 
 class _VehicleSettingsAppBar extends StatelessWidget
     implements PreferredSizeWidget {
+  const _VehicleSettingsAppBar({required this.onClose});
+  final Future<void> Function() onClose;
+
   @override
   Size get preferredSize => const Size.fromHeight(64);
 
@@ -121,7 +149,7 @@ class _VehicleSettingsAppBar extends StatelessWidget
                   ],
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: onClose,
                   child: const Icon(Icons.close,
                       color: AppColors.onSurfaceVariant),
                 ),

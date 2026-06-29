@@ -27,7 +27,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unitKgm => 'kgm';
 
   @override
-  String get unitHp => 'HP';
+  String get unitHp => 'PS';
 
   @override
   String get unitKmh => 'km/h';
@@ -213,10 +213,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get measurementDateTime => '計測日時';
 
   @override
-  String get peakPowerReached => '最高出力到達';
+  String get peakPowerReached => '最高出力';
 
   @override
-  String get chartPowerHp => '馬力 (HP)';
+  String get chartPowerHp => '馬力 (PS)';
 
   @override
   String get chartRpmX1000 => 'RPM x1000';
@@ -309,10 +309,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get peakStats => 'Peak Stats';
 
   @override
-  String get maxHp => 'MAX HP';
+  String get maxHp => 'MAX PS';
 
   @override
-  String get trendNeutral => '-- HP';
+  String get trendNeutral => '-- PS';
 
   @override
   String get ecuSyncDescription =>
@@ -371,4 +371,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deleteRecordError => '記録の削除に失敗しました。';
+
+  @override
+  String get unsavedChangesTitle => '入力内容が保存されていません。';
+
+  @override
+  String get unsavedChangesMessage => '破棄して閉じますか？';
+
+  @override
+  String get discardChanges => '破棄する';
 }
