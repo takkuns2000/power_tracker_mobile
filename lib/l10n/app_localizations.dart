@@ -640,6 +640,18 @@ abstract class AppLocalizations {
   /// **'計測ギア'**
   String get condMeasurementGear;
 
+  /// No description provided for @selectGearHint.
+  ///
+  /// In ja, this message translates to:
+  /// **'ギアを選択'**
+  String get selectGearHint;
+
+  /// No description provided for @gearNotSelected.
+  ///
+  /// In ja, this message translates to:
+  /// **'未選択'**
+  String get gearNotSelected;
+
   /// No description provided for @measurementMemo.
   ///
   /// In ja, this message translates to:
@@ -657,6 +669,48 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'係数を1にリセット'**
   String get resetLossCoefficient;
+
+  /// No description provided for @lossCoeffOriginal.
+  ///
+  /// In ja, this message translates to:
+  /// **'元の係数'**
+  String get lossCoeffOriginal;
+
+  /// No description provided for @lossCoeffOverride.
+  ///
+  /// In ja, this message translates to:
+  /// **'補正なし (×1)'**
+  String get lossCoeffOverride;
+
+  /// No description provided for @proSettings.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO設定'**
+  String get proSettings;
+
+  /// No description provided for @proModeOn.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO ON'**
+  String get proModeOn;
+
+  /// No description provided for @proModeOff.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO OFF'**
+  String get proModeOff;
+
+  /// No description provided for @errorSelectGear.
+  ///
+  /// In ja, this message translates to:
+  /// **'計測ギアの選択をしてください'**
+  String get errorSelectGear;
+
+  /// No description provided for @errorSetGearRatio.
+  ///
+  /// In ja, this message translates to:
+  /// **'車両設定からギア比を設定してください'**
+  String get errorSetGearRatio;
 
   /// No description provided for @shareImage.
   ///

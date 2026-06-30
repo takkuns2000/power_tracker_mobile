@@ -16,26 +16,52 @@ class MeasurementPreparationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MeasurementViewModel>();
+    final garageVm = context.watch<GarageViewModel>();
+    final isPro = garageVm.isPro;
+    final proModeActive = vm.proModeActive(isPro);
     final l10n = AppLocalizations.of(context)!;
+
+    String? validationError;
+    if (proModeActive && vm.selectedVehicleId != null) {
+      if (!vm.canSelectGear) {
+        validationError = l10n.errorSetGearRatio;
+      } else if (vm.selectedGearIndex == null) {
+        validationError = l10n.errorSelectGear;
+      }
+    }
+    final canStart = vm.selectedVehicleId != null &&
+        (!proModeActive || (vm.canSelectGear && vm.selectedGearIndex != null));
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: _TrackAppBar(),
+      appBar: _TrackAppBar(proModeActive: proModeActive),
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SectionTitle(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 6),
+              Text(
+                validationError ?? '',
+                style: AppTextStyles.bodyMd(context).copyWith(
+                  color: AppColors.error,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 20),
               VehicleDropdownCard(
-                vehicles: context.watch<GarageViewModel>().vehicles,
+                vehicles: garageVm.vehicles,
                 selectedId: vm.selectedVehicleId,
                 onChanged: (vehicle) =>
                     context.read<MeasurementViewModel>().selectVehicle(vehicle),
               ),
+              if (proModeActive && vm.canSelectGear) ...[
+                const SizedBox(height: 12),
+                _GearSelectorCard(vm: vm),
+              ],
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -64,9 +90,9 @@ class MeasurementPreparationView extends StatelessWidget {
               _VehicleStatusCard(),
               const SizedBox(height: 16),
               _GpsRateCard(),
-              const SizedBox(height: 32),
+              const Spacer(),
               _StartButton(
-                enabled: vm.selectedVehicleId != null,
+                enabled: canStart,
                 onTap: () {
                   context.read<MeasurementViewModel>().startMeasurement();
                   Navigator.of(context).push(
@@ -84,12 +110,18 @@ class MeasurementPreparationView extends StatelessWidget {
 }
 
 class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _TrackAppBar({required this.proModeActive});
+  final bool proModeActive;
+
   @override
   Size get preferredSize => const Size.fromHeight(64);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final garageVm = context.watch<GarageViewModel>();
+    final isPro = garageVm.isPro;
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -125,6 +157,38 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ],
                 ),
+                GestureDetector(
+                  onTap: isPro
+                      ? () => context
+                          .read<MeasurementViewModel>()
+                          .toggleProMode(proModeActive)
+                      : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: proModeActive
+                          ? AppColors.primary.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: proModeActive
+                            ? AppColors.primary
+                            : AppColors.outline.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Text(
+                      proModeActive ? l10n.proModeOn : l10n.proModeOff,
+                      style: AppTextStyles.labelCaps(context).copyWith(
+                        fontSize: 10,
+                        color: proModeActive
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -141,23 +205,13 @@ class _SectionTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              l10n.measurementPrep,
-              style: GoogleFonts.sora(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
         Text(
-          l10n.measurementPrepSubtitle,
-          style: AppTextStyles.bodyMd(context)
-              .copyWith(color: AppColors.onSurfaceVariant, fontSize: 13),
+          l10n.measurementPrep,
+          style: GoogleFonts.sora(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+          ),
         ),
       ],
     );
@@ -177,13 +231,14 @@ class _EnvInputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
               style: AppTextStyles.labelCaps(context)
-                  .copyWith(color: AppColors.primary)),
-          const SizedBox(height: 12),
+                  .copyWith(color: AppColors.primary, fontSize: 9)),
+          const SizedBox(height: 6),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -221,6 +276,97 @@ class _EnvInputCard extends StatelessWidget {
   }
 }
 
+class _GearSelectorCard extends StatelessWidget {
+  const _GearSelectorCard({required this.vm});
+  final MeasurementViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final gears = vm.selectableGears;
+    final gearLabels = [
+      l10n.labelGear1, l10n.labelGear2, l10n.labelGear3, l10n.labelGear4,
+      l10n.labelGear5, l10n.labelGear6, l10n.labelGear7,
+    ];
+
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Text(l10n.condMeasurementGear,
+              style: AppTextStyles.labelCaps(context)
+                  .copyWith(fontSize: 10, color: AppColors.onSurface)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...gears.map((g) {
+                    final idx = g.gearNumber - 1;
+                    final label = idx < gearLabels.length
+                        ? gearLabels[idx]
+                        : '${g.gearNumber}速';
+                    return _GearChip(
+                      label: label,
+                      selected: vm.selectedGearIndex == g.gearNumber,
+                      onTap: () => vm.setSelectedGear(g.gearNumber),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GearChip extends StatelessWidget {
+  const _GearChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.2)
+                : Colors.transparent,
+            border: Border.all(
+              color: selected
+                  ? AppColors.primary
+                  : AppColors.outline.withValues(alpha: 0.4),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            label,
+            style: AppTextStyles.labelCaps(context).copyWith(
+              fontSize: 10,
+              color: selected ? AppColors.primary : AppColors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _VehicleStatusCard extends StatelessWidget {
   static const _kGpsBlue = AppColors.secondary;
 
@@ -233,6 +379,7 @@ class _VehicleStatusCard extends StatelessWidget {
     final segments = vm.gpsPrecisionSegments;
 
     return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       leftBorderColor: _kGpsBlue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +388,7 @@ class _VehicleStatusCard extends StatelessWidget {
           Text(l10n.gpsPrecision,
               style: AppTextStyles.labelCaps(context)
                   .copyWith(color: _kGpsBlue)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -284,6 +431,7 @@ class _GpsRateCard extends StatelessWidget {
     final segments = vm.gpsHzSegments;
 
     return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       leftBorderColor: _kGpsBlue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +439,7 @@ class _GpsRateCard extends StatelessWidget {
         children: [
           Text(l10n.gpsUpdateRate,
               style: AppTextStyles.labelCaps(context).copyWith(color: _kGpsBlue)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

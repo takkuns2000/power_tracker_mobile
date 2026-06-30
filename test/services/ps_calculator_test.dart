@@ -126,4 +126,81 @@ void main() {
       expect(ps, 0.0);
     });
   });
+
+  group('calcTorqueKgm', () {
+    // タイヤ外径 0.6m, ギア比 2.0, ファイナル 4.0 での理論値検証。
+    // wheel_rpm = (20 / (π × 0.6)) × 60 ≈ 636.6
+    // engine_rpm = 636.6 × 2.0 × 4.0 ≈ 5093
+    // torque_Nm = (100 × 735.499) / (5093 × π/30) ≈ 137.9 N·m
+    // torque_kgm = 137.9 / 9.80665 ≈ 14.06 kgm
+    test('正常値: 100PS, 20m/s, gear=2.0, final=4.0, tire=0.6m → ~14.1 kgm', () {
+      final result = PsCalculatorService.calcTorqueKgm(
+        powerPs: 100,
+        speedMs: 20,
+        gearRatio: 2.0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, isNotNull);
+      expect(result!, closeTo(14.06, 0.5));
+    });
+
+    test('speedMs=0 のとき null を返す', () {
+      final result = PsCalculatorService.calcTorqueKgm(
+        powerPs: 100,
+        speedMs: 0,
+        gearRatio: 2.0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, isNull);
+    });
+
+    test('powerPs<=0 のとき 0.0 を返す', () {
+      final result = PsCalculatorService.calcTorqueKgm(
+        powerPs: 0,
+        speedMs: 20,
+        gearRatio: 2.0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, 0.0);
+    });
+
+    test('gearRatio=0 のとき null を返す', () {
+      final result = PsCalculatorService.calcTorqueKgm(
+        powerPs: 100,
+        speedMs: 20,
+        gearRatio: 0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, isNull);
+    });
+  });
+
+  group('calcEngineRpm', () {
+    // wheel_rpm = (20 / (π × 0.6)) × 60 ≈ 636.6
+    // engine_rpm = 636.6 × 2.0 × 4.0 ≈ 5093
+    test('正常値: 20m/s, gear=2.0, final=4.0, tire=0.6m → ~5093 rpm', () {
+      final result = PsCalculatorService.calcEngineRpm(
+        speedMs: 20,
+        gearRatio: 2.0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, isNotNull);
+      expect(result!, closeTo(5093, 10));
+    });
+
+    test('speedMs=0 のとき null を返す', () {
+      final result = PsCalculatorService.calcEngineRpm(
+        speedMs: 0,
+        gearRatio: 2.0,
+        finalRatio: 4.0,
+        tireOuterDiameterM: 0.6,
+      );
+      expect(result, isNull);
+    });
+  });
 }

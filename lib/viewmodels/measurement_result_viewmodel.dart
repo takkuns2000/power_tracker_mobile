@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,9 @@ import '../models/measurement.dart';
 import '../repositories/measurement_repository.dart';
 import '../services/ps_calculator.dart';
 
-typedef HpPoint = ({int offsetMs, double ps});
+typedef HpPoint = ({int offsetMs, double ps, double? torqueKgm, int? rpm});
+
+enum GraphAxisMode { time, rpm }
 
 class MeasurementResultViewModel extends ChangeNotifier {
   MeasurementResultViewModel(this._repository, Measurement measurement)
@@ -24,6 +27,8 @@ class MeasurementResultViewModel extends ChangeNotifier {
 
   String? _saveError;
   String? _shareError;
+  GraphAxisMode _graphAxisMode = GraphAxisMode.time;
+  bool _lossOverrideActive = false;
   final vehicleExpandedNotifier = ValueNotifier<bool>(false);
   final selectedPointNotifier = ValueNotifier<HpPoint?>(null);
 
@@ -32,6 +37,38 @@ class MeasurementResultViewModel extends ChangeNotifier {
   String? get saveError => _saveError;
   String? get shareError => _shareError;
   bool get hasPendingChanges => _pendingMemo != _measurement.memo;
+  GraphAxisMode get graphAxisMode => _graphAxisMode;
+  bool get canToggleRpmAxis => hasRpmData;
+  bool get isLossOverrideActive => _lossOverrideActive;
+
+  void toggleGraphAxis() {
+    if (!canToggleRpmAxis) return;
+    _graphAxisMode = _graphAxisMode == GraphAxisMode.time
+        ? GraphAxisMode.rpm
+        : GraphAxisMode.time;
+    selectedPointNotifier.value = null;
+    notifyListeners();
+  }
+
+  void toggleLossOverride() {
+    _lossOverrideActive = !_lossOverrideActive;
+    _hpValues = _computeHpValues(
+      _measurement,
+      lossOverride: _lossOverrideActive ? 0.0 : null,
+    );
+    final prev = selectedPointNotifier.value;
+    if (prev != null) {
+      if (_graphAxisMode == GraphAxisMode.rpm) {
+        selectedPointNotifier.value = null;
+      } else {
+        selectedPointNotifier.value = _hpValues.firstWhere(
+          (p) => p.offsetMs == prev.offsetMs,
+          orElse: () => _hpValues.first,
+        );
+      }
+    }
+    notifyListeners();
+  }
 
   void clearSaveError() {
     _saveError = null;
@@ -86,6 +123,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
     try {
       await _repository.updateDriveLossCoefficient(id, coefficient);
       _measurement = _measurement.copyWith(driveLossCoefficient: coefficient);
+      _lossOverrideActive = false;
       _hpValues = _computeHpValues(_measurement);
     } catch (e) {
       debugPrint('[MeasurementResultViewModel] saveDriveLoss error: $e');
@@ -137,21 +175,76 @@ class MeasurementResultViewModel extends ChangeNotifier {
     }
   }
 
-  static List<HpPoint> _computeHpValues(Measurement m) {
+  static List<HpPoint> _computeHpValues(Measurement m, {double? lossOverride}) {
     if (m.dataPoints.isEmpty) return [];
     final calculator = PsCalculatorService();
-    final driveEfficiency = 1.0 - m.driveLossCoefficient;
+    final lossCoeff = lossOverride ?? m.driveLossCoefficient;
+    final driveEfficiency = 1.0 - lossCoeff;
+
+    final usedGear = m.usedGearRatio;
+    final finalGear = m.finalGearRatio;
+    final tireOuter = m.vehicleSnapshot.tireSize?.outerDiameterM;
+    final canCalcTorque =
+        usedGear != null && finalGear != null && tireOuter != null;
+
     return m.dataPoints.map((dp) {
       final time = m.measuredAt.add(Duration(milliseconds: dp.offsetMs));
+      final speedMs = dp.speedKmh / 3.6;
       final ps = calculator.calculate(
-        currentSpeedMs: dp.speedKmh / 3.6,
+        currentSpeedMs: speedMs,
         currentAltitudeM: dp.altitudeM,
         currentTime: time,
         vehicleMassKg: m.vehicleWeightKg,
         driveEfficiency: driveEfficiency,
       );
-      return (offsetMs: dp.offsetMs, ps: ps);
+      final torqueKgm = canCalcTorque
+          ? PsCalculatorService.calcTorqueKgm(
+              powerPs: ps,
+              speedMs: speedMs,
+              gearRatio: usedGear,
+              finalRatio: finalGear,
+              tireOuterDiameterM: tireOuter,
+            )
+          : null;
+      final rpm = canCalcTorque
+          ? PsCalculatorService.calcEngineRpm(
+              speedMs: speedMs,
+              gearRatio: usedGear,
+              finalRatio: finalGear,
+              tireOuterDiameterM: tireOuter,
+            )
+          : null;
+      return (offsetMs: dp.offsetMs, ps: ps, torqueKgm: torqueKgm, rpm: rpm);
     }).toList();
+  }
+
+  double get maxHp {
+    if (_hpValues.isEmpty) return _measurement.maxHp;
+    return _hpValues.map((p) => p.ps).reduce(math.max);
+  }
+
+  double? get maxTorqueKgm {
+    final values =
+        _hpValues.map((p) => p.torqueKgm).whereType<double>().toList();
+    if (values.isEmpty) return null;
+    return values.reduce(math.max);
+  }
+
+  bool get hasTorqueData => _hpValues.any((p) => p.torqueKgm != null);
+  bool get hasRpmData => _hpValues.any((p) => p.rpm != null);
+
+  List<HpPoint> get rpmChartPoints {
+    final points = _hpValues.where((p) => p.rpm != null).toList();
+    if (points.isEmpty) return [];
+    final result = <HpPoint>[];
+    int maxRpmSeen = 0;
+    for (final p in points) {
+      if (p.rpm! > maxRpmSeen) {
+        result.add(p);
+        maxRpmSeen = p.rpm!;
+      }
+    }
+    return result;
   }
 
   Future<File> _createShareImage(Measurement m) async {

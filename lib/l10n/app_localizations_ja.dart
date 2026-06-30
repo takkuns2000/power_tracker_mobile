@@ -282,6 +282,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get condMeasurementGear => '計測ギア';
 
   @override
+  String get selectGearHint => 'ギアを選択';
+
+  @override
+  String get gearNotSelected => '未選択';
+
+  @override
   String get measurementMemo => '計測記録メモ';
 
   @override
@@ -289,6 +295,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get resetLossCoefficient => '係数を1にリセット';
+
+  @override
+  String get lossCoeffOriginal => '元の係数';
+
+  @override
+  String get lossCoeffOverride => '補正なし (×1)';
+
+  @override
+  String get proSettings => 'PRO設定';
+
+  @override
+  String get proModeOn => 'PRO ON';
+
+  @override
+  String get proModeOff => 'PRO OFF';
+
+  @override
+  String get errorSelectGear => '計測ギアの選択をしてください';
+
+  @override
+  String get errorSetGearRatio => '車両設定からギア比を設定してください';
 
   @override
   String get shareImage => '画像をシェア';

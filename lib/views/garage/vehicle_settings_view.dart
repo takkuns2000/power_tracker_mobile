@@ -199,6 +199,9 @@ class _BasicInfoModule extends StatelessWidget {
                   placeholder: '1450',
                   controller: vm.weightController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   suffix: Text(l10n.unitKg,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),
@@ -211,6 +214,7 @@ class _BasicInfoModule extends StatelessWidget {
                   placeholder: '1998',
                   controller: vm.displacementController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   suffix: Text(l10n.unitCc,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),

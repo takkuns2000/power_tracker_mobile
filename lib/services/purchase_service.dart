@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+const _kDebugProDefault = bool.fromEnvironment('DEBUG_PRO');
+
 class PurchaseService extends ChangeNotifier {
-  bool _isPro = false;
+  bool _isPro = _kDebugProDefault;
 
   bool get isPro => _isPro;
 
