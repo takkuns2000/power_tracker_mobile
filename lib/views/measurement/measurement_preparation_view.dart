@@ -23,8 +23,13 @@ class MeasurementPreparationView extends StatelessWidget {
 
     String? validationError;
     if (proModeActive && vm.selectedVehicleId != null) {
-      if (!vm.canSelectGear) {
+      final vehicle = vm.selectedVehicle;
+      final hasGearRatios = vehicle?.gearRatios.isNotEmpty == true;
+      final hasTireSize = vehicle?.tireSize != null;
+      if (!hasGearRatios) {
         validationError = l10n.errorSetGearRatio;
+      } else if (!hasTireSize) {
+        validationError = l10n.errorSetTireSize;
       } else if (vm.selectedGearIndex == null) {
         validationError = l10n.errorSelectGear;
       }

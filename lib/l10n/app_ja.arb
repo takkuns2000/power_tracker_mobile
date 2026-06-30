@@ -110,6 +110,7 @@
   "proModeOff": "PRO OFF",
   "errorSelectGear": "計測ギアの選択をしてください",
   "errorSetGearRatio": "車両設定からギア比を設定してください",
+  "errorSetTireSize": "車両設定からタイヤサイズを設定してください",
   "shareImage": "画像をシェア",
   "tweetResult": "ツイートする",
   "complete": "完了",

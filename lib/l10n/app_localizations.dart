@@ -712,6 +712,12 @@ abstract class AppLocalizations {
   /// **'車両設定からギア比を設定してください'**
   String get errorSetGearRatio;
 
+  /// No description provided for @errorSetTireSize.
+  ///
+  /// In ja, this message translates to:
+  /// **'車両設定からタイヤサイズを設定してください'**
+  String get errorSetTireSize;
+
   /// No description provided for @shareImage.
   ///
   /// In ja, this message translates to:

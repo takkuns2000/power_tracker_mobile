@@ -16,7 +16,10 @@ enum GraphAxisMode { time, rpm }
 class MeasurementResultViewModel extends ChangeNotifier {
   MeasurementResultViewModel(this._repository, Measurement measurement)
       : _measurement = measurement,
-        _hpValues = _computeHpValues(measurement) {
+        _hpValues = _computeHpValues(measurement),
+        _graphAxisMode = measurement.usedGearRatio != null
+            ? GraphAxisMode.rpm
+            : GraphAxisMode.time {
     _pendingMemo = measurement.memo;
   }
 
@@ -27,7 +30,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
 
   String? _saveError;
   String? _shareError;
-  GraphAxisMode _graphAxisMode = GraphAxisMode.time;
+  GraphAxisMode _graphAxisMode;
   bool _lossOverrideActive = false;
   final vehicleExpandedNotifier = ValueNotifier<bool>(false);
   final selectedPointNotifier = ValueNotifier<HpPoint?>(null);
@@ -230,6 +233,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
     return values.reduce(math.max);
   }
 
+  bool get isMeasurementPro => _measurement.usedGearRatio != null;
   bool get hasTorqueData => _hpValues.any((p) => p.torqueKgm != null);
   bool get hasRpmData => _hpValues.any((p) => p.rpm != null);
 

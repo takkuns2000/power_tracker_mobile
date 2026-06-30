@@ -318,6 +318,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorSetGearRatio => '車両設定からギア比を設定してください';
 
   @override
+  String get errorSetTireSize => '車両設定からタイヤサイズを設定してください';
+
+  @override
   String get shareImage => '画像をシェア';
 
   @override

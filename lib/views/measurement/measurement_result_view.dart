@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../models/measurement.dart';
-import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/measurement_result_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
 import '../widgets/confirm_dialog.dart';
@@ -33,7 +32,7 @@ class _MeasurementResultBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MeasurementResultViewModel>();
-    final isPro = context.watch<GarageViewModel>().isPro;
+    final isPro = vm.isMeasurementPro;
     final m = vm.measurement;
     final l10n = AppLocalizations.of(context)!;
 
@@ -528,7 +527,7 @@ class _ChartTooltipContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final elapsedSec = (point.offsetMs - firstMs) / 1000.0;
     final xLabel = axisMode == GraphAxisMode.rpm && point.rpm != null
-        ? '${(point.rpm! / 1000.0).toStringAsFixed(1)}k RPM'
+        ? '${point.rpm!} RPM'
         : '${elapsedSec.toStringAsFixed(1)} 秒';
 
     return Container(

@@ -173,7 +173,7 @@ void main() {
       expect(vm.graphAxisMode, GraphAxisMode.time);
     });
 
-    test('RPM データありのとき toggleGraphAxis で time→rpm→time と切り替わる', () {
+    test('RPM データありのとき初期モードは rpm で toggleGraphAxis で rpm→time→rpm と切り替わる', () {
       final tire = TireSize(widthMm: 205, aspectRatio: 55, rimInch: 16);
       final v = _vehicle(tireSize: tire);
       final dps = [_dp(0, 0), _dp(1000, 60), _dp(2000, 100)];
@@ -185,11 +185,11 @@ void main() {
       );
       final vm = MeasurementResultViewModel(repo, m);
 
-      expect(vm.graphAxisMode, GraphAxisMode.time);
-      vm.toggleGraphAxis();
       expect(vm.graphAxisMode, GraphAxisMode.rpm);
       vm.toggleGraphAxis();
       expect(vm.graphAxisMode, GraphAxisMode.time);
+      vm.toggleGraphAxis();
+      expect(vm.graphAxisMode, GraphAxisMode.rpm);
     });
   });
 
@@ -284,7 +284,7 @@ void main() {
         finalGearRatio: 4.0,
       );
       final vm = MeasurementResultViewModel(repo, m);
-      vm.toggleGraphAxis();
+      // PRO計測は初期モードが rpm のため toggleGraphAxis 不要
       vm.selectChartPoint(vm.hpValues[1]);
       vm.toggleLossOverride();
       expect(vm.selectedPointNotifier.value, isNull);
