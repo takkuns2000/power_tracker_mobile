@@ -70,6 +70,56 @@ torque [kgm] = torque [N·m] / 9.80665
 - `MeasurementResultViewModel.toggleGraphAxis()` で `GraphAxisMode.time ↔ rpm` を切り替え
 - RPM データ（`HpPoint.rpm`）が存在しない場合は切り替えボタンを無効化
 - RPM データは `usedGearRatio` / `finalGearRatio` / `tireSize` がすべて揃っているときのみ生成される
+- **PRO 計測はデフォルトで RPM 軸表示**（`MeasurementResultViewModel` コンストラクタで初期値設定）
+
+### RPM グラフの重複表示防止
+
+GPS 由来の速度データは計測中に落ち込みが発生することがあり、同一 RPM 帯に複数点が生じる。
+`rpmChartPoints` getter で単調増加フィルタを適用して解決：
+
+```dart
+// MeasurementResultViewModel.rpmChartPoints
+// → RPM が前の点より大きい点のみを通す（単調増加）
+```
+
+### トルクグラフのデュアルスケール表示
+
+馬力グラフと同一キャンバスに描画するが、独立スケールで表示：
+
+```
+torque Y 座標 = size.height × (1 - 0.5 × torqueKgm / maxTorque)
+```
+
+ピーク時にグラフ高さの 50% 付近に表示される。`powerPs <= 0` の場合はトルク値を `0.0` で返す。
+
+### PRO 計測の判定方法
+
+計測記録が PRO モードで取得されたかどうかの判定は **ユーザーの現在のサブスク状態ではなく計測データで行う**。
+
+```dart
+// Measurement.usedGearRatio != null → PRO 計測
+bool get isMeasurementPro => _measurement.usedGearRatio != null;
+```
+
+- PRO 計測の結果画面: `isPro = vm.isMeasurementPro`（サブスク状態に依存しない）
+- History カードの PRO バッジ: `m.usedGearRatio != null` で表示
+- これにより PRO 解約後も過去の PRO 計測データは引き続き参照可能
+
+### PRO 非計測データの表示
+
+非 PRO 計測を結果画面で開いた場合、トルク・回転数エリアは `ProLockWrapper(mode: ProLockMode.notMeasured)` でぼかし表示。
+
+- 表示テキスト：「トルク・回転数グラフ / PRO モードで計測すると表示されます」
+- `ProLockMode.upgrade`（計測中画面・未契約ユーザー向け）とは別メッセージ
+
+### 計測準備画面のバリデーション優先度
+
+PRO モード有効時のエラー表示優先順位：
+
+1. 車両未登録 → 「ガレージから車両を登録してください」
+2. ギア比未設定 → 「車両設定からギア比を設定してください」
+3. タイヤサイズ未設定 → 「車両設定からタイヤサイズを設定してください」
+4. ギア未選択 → 「計測ギアの選択をしてください」
 
 ### 複数台登録制限
 
