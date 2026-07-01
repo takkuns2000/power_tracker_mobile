@@ -313,6 +313,7 @@ HpPoint _findNearestPoint(
           return (tapX - ax).abs() < (tapX - bx).abs() ? a : b;
         });
       }
+      return rpmPoints.first;
     }
   }
   final firstMs = points.first.offsetMs;
@@ -416,22 +417,20 @@ class _ChartCard extends StatelessWidget {
                               .reduce((a, b) => a > b ? a : b);
 
                           // X 座標の正規化（時間 or RPM）
+                          final rpmPoints = isRpm
+                              ? hpValues.where((h) => h.rpm != null).toList()
+                              : <HpPoint>[];
                           double xFracForPoint(HpPoint p) {
-                            if (isRpm && p.rpm != null) {
-                              final rpmPoints = hpValues
-                                  .where((h) => h.rpm != null)
-                                  .toList();
-                              if (rpmPoints.length >= 2) {
-                                final minRpm = rpmPoints
-                                    .map((h) => h.rpm!)
-                                    .reduce((a, b) => a < b ? a : b);
-                                final maxRpm = rpmPoints
-                                    .map((h) => h.rpm!)
-                                    .reduce((a, b) => a > b ? a : b);
-                                final range = (maxRpm - minRpm).toDouble();
-                                if (range > 0) {
-                                  return (p.rpm! - minRpm) / range;
-                                }
+                            if (isRpm && p.rpm != null && rpmPoints.length >= 2) {
+                              final minRpm = rpmPoints
+                                  .map((h) => h.rpm!)
+                                  .reduce((a, b) => a < b ? a : b);
+                              final maxRpm = rpmPoints
+                                  .map((h) => h.rpm!)
+                                  .reduce((a, b) => a > b ? a : b);
+                              final range = (maxRpm - minRpm).toDouble();
+                              if (range > 0) {
+                                return (p.rpm! - minRpm) / range;
                               }
                             }
                             return totalMs > 0

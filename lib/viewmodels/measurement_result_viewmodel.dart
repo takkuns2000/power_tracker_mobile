@@ -66,7 +66,7 @@ class MeasurementResultViewModel extends ChangeNotifier {
       } else {
         selectedPointNotifier.value = _hpValues.firstWhere(
           (p) => p.offsetMs == prev.offsetMs,
-          orElse: () => _hpValues.first,
+          orElse: () => _hpValues.isEmpty ? prev : _hpValues.first,
         );
       }
     }

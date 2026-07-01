@@ -12,6 +12,8 @@ import 'vehicle_selection_viewmodel.dart';
 
 enum MeasurementStatus { idle, measuring, finished }
 
+enum MeasurementValidationError { noVehicle, setGearRatio, setTireSize, selectGear }
+
 class MeasurementViewModel extends ChangeNotifier {
   MeasurementViewModel(
       this._gpsService, this._repository, this._vehicleSelection) {
@@ -65,6 +67,27 @@ class MeasurementViewModel extends ChangeNotifier {
   bool get isGpsLocked =>
       _gpsService.permissionStatus == GpsPermissionStatus.granted &&
       _gpsAccuracyM != null;
+
+  MeasurementValidationError? validationErrorFor({
+    required bool vehiclesEmpty,
+    required bool isPro,
+  }) {
+    final active = proModeActive(isPro);
+    if (vehiclesEmpty) return MeasurementValidationError.noVehicle;
+    if (active && selectedVehicleId != null) {
+      final vehicle = selectedVehicle;
+      if (vehicle?.gearRatios.isNotEmpty != true) return MeasurementValidationError.setGearRatio;
+      if (vehicle?.tireSize == null) return MeasurementValidationError.setTireSize;
+      if (selectedGearIndex == null) return MeasurementValidationError.selectGear;
+    }
+    return null;
+  }
+
+  bool canStart({required bool vehiclesEmpty, required bool isPro}) {
+    final active = proModeActive(isPro);
+    return selectedVehicleId != null &&
+        (!active || (canSelectGear && selectedGearIndex != null));
+  }
 
   /// ギア選択が可能か（車両にギア比とタイヤサイズが設定済み）
   bool get canSelectGear {

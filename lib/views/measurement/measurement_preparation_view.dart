@@ -21,27 +21,25 @@ class MeasurementPreparationView extends StatelessWidget {
     final proModeActive = vm.proModeActive(isPro);
     final l10n = AppLocalizations.of(context)!;
 
-    String? validationError;
-    if (garageVm.vehicles.isEmpty) {
-      validationError = l10n.errorNoVehicle;
-    } else if (proModeActive && vm.selectedVehicleId != null) {
-      final vehicle = vm.selectedVehicle;
-      final hasGearRatios = vehicle?.gearRatios.isNotEmpty == true;
-      final hasTireSize = vehicle?.tireSize != null;
-      if (!hasGearRatios) {
-        validationError = l10n.errorSetGearRatio;
-      } else if (!hasTireSize) {
-        validationError = l10n.errorSetTireSize;
-      } else if (vm.selectedGearIndex == null) {
-        validationError = l10n.errorSelectGear;
-      }
-    }
-    final canStart = vm.selectedVehicleId != null &&
-        (!proModeActive || (vm.canSelectGear && vm.selectedGearIndex != null));
+    final error = vm.validationErrorFor(
+      vehiclesEmpty: garageVm.vehicles.isEmpty,
+      isPro: isPro,
+    );
+    final String? validationError = switch (error) {
+      MeasurementValidationError.noVehicle    => l10n.errorNoVehicle,
+      MeasurementValidationError.setGearRatio => l10n.errorSetGearRatio,
+      MeasurementValidationError.setTireSize  => l10n.errorSetTireSize,
+      MeasurementValidationError.selectGear   => l10n.errorSelectGear,
+      null => null,
+    };
+    final canStart = vm.canStart(
+      vehiclesEmpty: garageVm.vehicles.isEmpty,
+      isPro: isPro,
+    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: _TrackAppBar(proModeActive: proModeActive),
+      appBar: _TrackAppBar(proModeActive: proModeActive, isPro: isPro),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
@@ -117,8 +115,9 @@ class MeasurementPreparationView extends StatelessWidget {
 }
 
 class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _TrackAppBar({required this.proModeActive});
+  const _TrackAppBar({required this.proModeActive, required this.isPro});
   final bool proModeActive;
+  final bool isPro;
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -126,8 +125,6 @@ class _TrackAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final garageVm = context.watch<GarageViewModel>();
-    final isPro = garageVm.isPro;
 
     return ClipRRect(
       child: BackdropFilter(
