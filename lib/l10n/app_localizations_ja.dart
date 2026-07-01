@@ -45,7 +45,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navHistory => 'HISTORY';
 
   @override
-  String get navVehicles => 'VEHICLES';
+  String get navVehicles => 'GARAGE';
 
   @override
   String get garage => 'ガレージ';
@@ -81,7 +81,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get proModeLimited => 'Pro Mode 限定';
 
   @override
-  String get upgradeToUnlock => 'アップグレードして解放';
+  String get upgradeToUnlock => 'アップグレードしてPROモードを解放';
 
   @override
   String get labelVehicleNickname => '車両ニックネーム';
@@ -282,6 +282,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get condMeasurementGear => '計測ギア';
 
   @override
+  String get selectGearHint => 'ギアを選択';
+
+  @override
+  String get gearNotSelected => '未選択';
+
+  @override
   String get measurementMemo => '計測記録メモ';
 
   @override
@@ -289,6 +295,39 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get resetLossCoefficient => '係数を1にリセット';
+
+  @override
+  String get lossCoeffOriginal => '元の係数';
+
+  @override
+  String get lossCoeffOverride => '補正なし (×1)';
+
+  @override
+  String get proSettings => 'PRO設定';
+
+  @override
+  String get proModeOn => 'PRO ON';
+
+  @override
+  String get proModeOff => 'PRO OFF';
+
+  @override
+  String get proNotMeasuredLabel => 'トルク・回転数グラフ';
+
+  @override
+  String get proNotMeasuredSub => 'PRO モードで計測すると表示されます';
+
+  @override
+  String get errorNoVehicle => 'ガレージから車両を登録してください';
+
+  @override
+  String get errorSelectGear => '計測ギアの選択をしてください';
+
+  @override
+  String get errorSetGearRatio => '車両設定からギア比を設定してください';
+
+  @override
+  String get errorSetTireSize => '車両設定からタイヤサイズを設定してください';
 
   @override
   String get shareImage => '画像をシェア';

@@ -2,7 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter (debug)",
+      "name": "Debug (PRO ON)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define=DEBUG_PRO=true"]
+    },
+    {
+      "name": "Debug (PRO OFF)",
       "request": "launch",
       "type": "dart"
     }

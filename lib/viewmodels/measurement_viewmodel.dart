@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../models/gear_ratio.dart';
 import '../models/measurement.dart';
 import '../models/measurement_data_point.dart';
 import '../models/vehicle.dart';
@@ -10,6 +11,8 @@ import 'measurement_result_viewmodel.dart';
 import 'vehicle_selection_viewmodel.dart';
 
 enum MeasurementStatus { idle, measuring, finished }
+
+enum MeasurementValidationError { noVehicle, setGearRatio, setTireSize, selectGear }
 
 class MeasurementViewModel extends ChangeNotifier {
   MeasurementViewModel(
@@ -28,6 +31,10 @@ class MeasurementViewModel extends ChangeNotifier {
 
   double? _currentPs;
   double _maxPs = 0;
+  double? _currentTorqueKgm;
+  double _maxTorqueKgm = 0;
+  int? _selectedGearIndex;
+  bool? _proModeOverride;
   DateTime? _startTime;
   final List<MeasurementDataPoint> _dataPoints = [];
 
@@ -47,6 +54,10 @@ class MeasurementViewModel extends ChangeNotifier {
   double? get pressureHpa => _pressureHpa;
   double? get currentPs => _currentPs;
   double get maxPs => _maxPs;
+  double? get currentTorqueKgm => _currentTorqueKgm;
+  double get maxTorqueKgm => _maxTorqueKgm;
+  int? get selectedGearIndex => _selectedGearIndex;
+  bool proModeActive(bool isPro) => _proModeOverride ?? isPro;
   DateTime? get startTime => _startTime;
   Measurement? get savedMeasurement => _savedMeasurement;
   String? get saveError => _saveError;
@@ -56,6 +67,44 @@ class MeasurementViewModel extends ChangeNotifier {
   bool get isGpsLocked =>
       _gpsService.permissionStatus == GpsPermissionStatus.granted &&
       _gpsAccuracyM != null;
+
+  MeasurementValidationError? validationErrorFor({
+    required bool vehiclesEmpty,
+    required bool isPro,
+  }) {
+    final active = proModeActive(isPro);
+    if (vehiclesEmpty) return MeasurementValidationError.noVehicle;
+    if (active && selectedVehicleId != null) {
+      final vehicle = selectedVehicle;
+      if (vehicle?.gearRatios.isNotEmpty != true) return MeasurementValidationError.setGearRatio;
+      if (vehicle?.tireSize == null) return MeasurementValidationError.setTireSize;
+      if (selectedGearIndex == null) return MeasurementValidationError.selectGear;
+    }
+    return null;
+  }
+
+  bool canStart({required bool vehiclesEmpty, required bool isPro}) {
+    final active = proModeActive(isPro);
+    return selectedVehicleId != null &&
+        (!active || (canSelectGear && selectedGearIndex != null));
+  }
+
+  /// ギア選択が可能か（車両にギア比とタイヤサイズが設定済み）
+  bool get canSelectGear {
+    final vehicle = _vehicleSelection.vehicle;
+    if (vehicle == null) return false;
+    return vehicle.tireSize != null && vehicle.gearRatios.isNotEmpty;
+  }
+
+  /// 選択可能なギアのリスト（変速ギアのみ、ギア番号 1-7）
+  List<GearRatio> get selectableGears {
+    final vehicle = _vehicleSelection.vehicle;
+    if (vehicle == null) return [];
+    return vehicle.gearRatios
+        .where((g) => g.gearNumber > 0)
+        .toList()
+      ..sort((a, b) => a.gearNumber.compareTo(b.gearNumber));
+  }
 
   int get gpsPrecisionSegments {
     final acc = _gpsAccuracyM;
@@ -93,7 +142,19 @@ class MeasurementViewModel extends ChangeNotifier {
 
   void selectVehicle(Vehicle? vehicle) {
     _vehicleSelection.select(vehicle);
+    _selectedGearIndex = null;
     _calculator.reset();
+    notifyListeners();
+  }
+
+  void setSelectedGear(int? gearIndex) {
+    _selectedGearIndex = gearIndex;
+    notifyListeners();
+  }
+
+  void toggleProMode(bool currentIsActive) {
+    _proModeOverride = !currentIsActive;
+    if (!_proModeOverride!) _selectedGearIndex = null;
     notifyListeners();
   }
 
@@ -112,6 +173,8 @@ class MeasurementViewModel extends ChangeNotifier {
     _startTime = DateTime.now();
     _currentPs = null;
     _maxPs = 0;
+    _currentTorqueKgm = null;
+    _maxTorqueKgm = 0;
     _dataPoints.clear();
     _calculator.reset();
     notifyListeners();
@@ -125,6 +188,16 @@ class MeasurementViewModel extends ChangeNotifier {
       _saveError = '計測データが不足しています。';
     } else {
       try {
+        final gearIndex = _selectedGearIndex;
+        final usedGear = gearIndex != null
+            ? vehicle.gearRatios
+                .where((g) => g.gearNumber == gearIndex)
+                .firstOrNull
+            : null;
+        final finalGear = vehicle.gearRatios
+            .where((g) => g.gearNumber == 0)
+            .firstOrNull;
+
         final measurement = Measurement(
           vehicleId: vehicle.id,
           vehicleName: vehicle.name,
@@ -135,6 +208,8 @@ class MeasurementViewModel extends ChangeNotifier {
           temperatureCelsius: _temperatureCelsius,
           pressureHpa: _pressureHpa,
           driveLossCoefficient: 1.0 - vehicle.drivetrain.driveEfficiency,
+          finalGearRatio: finalGear?.ratio,
+          usedGearRatio: usedGear?.ratio,
           dataPoints: List.unmodifiable(_dataPoints),
         );
         _savedMeasurement = await _repository.insert(measurement);
@@ -150,6 +225,10 @@ class MeasurementViewModel extends ChangeNotifier {
     _status = MeasurementStatus.idle;
     _currentPs = null;
     _maxPs = 0;
+    _currentTorqueKgm = null;
+    _maxTorqueKgm = 0;
+    _selectedGearIndex = null;
+    _proModeOverride = null;
     _startTime = null;
     _dataPoints.clear();
     _savedMeasurement = null;
@@ -207,6 +286,29 @@ class MeasurementViewModel extends ChangeNotifier {
     );
     _currentPs = ps;
     if (ps > _maxPs) _maxPs = ps;
+
+    // トルク計算（ギア選択済み + タイヤサイズあり）
+    final gearIndex = _selectedGearIndex;
+    final tireOuter = vehicle.tireSize?.outerDiameterM;
+    if (gearIndex != null && tireOuter != null) {
+      final usedGear = vehicle.gearRatios
+          .where((g) => g.gearNumber == gearIndex)
+          .firstOrNull;
+      final finalGear = vehicle.gearRatios
+          .where((g) => g.gearNumber == 0)
+          .firstOrNull;
+      if (usedGear != null && finalGear != null) {
+        final torque = PsCalculatorService.calcTorqueKgm(
+          powerPs: ps,
+          speedMs: position.speed,
+          gearRatio: usedGear.ratio,
+          finalRatio: finalGear.ratio,
+          tireOuterDiameterM: tireOuter,
+        );
+        _currentTorqueKgm = torque;
+        if (torque != null && torque > _maxTorqueKgm) _maxTorqueKgm = torque;
+      }
+    }
 
     notifyListeners();
   }

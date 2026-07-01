@@ -8,6 +8,7 @@ import '../../app_theme.dart';
 import '../../models/vehicle.dart';
 import '../../viewmodels/garage_viewmodel.dart';
 import 'vehicle_settings_view.dart';
+import '../widgets/confirm_dialog.dart';
 import '../widgets/glass_card.dart';
 
 class GarageView extends StatelessWidget {
@@ -44,25 +45,15 @@ class GarageView extends StatelessWidget {
   void _onAddTap(BuildContext context) {
     debugPrint('[Garage] _onAddTap called');
     final vm = context.read<GarageViewModel>();
-    final isPro = vm.isPro;
-    final vehicleCount = vm.vehicles.length;
-    debugPrint('[Garage] isPro=$isPro, vehicleCount=$vehicleCount');
-    if (!isPro && vehicleCount >= 1) {
+    debugPrint('[Garage] canAddVehicle=${vm.canAddVehicle}');
+    if (!vm.canAddVehicle) {
       final l10n = AppLocalizations.of(context)!;
-      showDialog<void>(
+      showConfirmDialog<void>(
         context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: Text(l10n.proModeRequired,
-              style: AppTextStyles.headlineLg(context)),
-          content: Text(l10n.proModeRequiredMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.close),
-            ),
-          ],
-        ),
+        icon: Icons.workspace_premium_outlined,
+        title: l10n.proModeRequired,
+        content: Text(l10n.proModeRequiredMessage),
+        okLabel: l10n.close,
       );
       return;
     }

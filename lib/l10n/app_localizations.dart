@@ -169,7 +169,7 @@ abstract class AppLocalizations {
   /// No description provided for @navVehicles.
   ///
   /// In ja, this message translates to:
-  /// **'VEHICLES'**
+  /// **'GARAGE'**
   String get navVehicles;
 
   /// No description provided for @garage.
@@ -241,7 +241,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeToUnlock.
   ///
   /// In ja, this message translates to:
-  /// **'アップグレードして解放'**
+  /// **'アップグレードしてPROモードを解放'**
   String get upgradeToUnlock;
 
   /// No description provided for @labelVehicleNickname.
@@ -640,6 +640,18 @@ abstract class AppLocalizations {
   /// **'計測ギア'**
   String get condMeasurementGear;
 
+  /// No description provided for @selectGearHint.
+  ///
+  /// In ja, this message translates to:
+  /// **'ギアを選択'**
+  String get selectGearHint;
+
+  /// No description provided for @gearNotSelected.
+  ///
+  /// In ja, this message translates to:
+  /// **'未選択'**
+  String get gearNotSelected;
+
   /// No description provided for @measurementMemo.
   ///
   /// In ja, this message translates to:
@@ -657,6 +669,72 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'係数を1にリセット'**
   String get resetLossCoefficient;
+
+  /// No description provided for @lossCoeffOriginal.
+  ///
+  /// In ja, this message translates to:
+  /// **'元の係数'**
+  String get lossCoeffOriginal;
+
+  /// No description provided for @lossCoeffOverride.
+  ///
+  /// In ja, this message translates to:
+  /// **'補正なし (×1)'**
+  String get lossCoeffOverride;
+
+  /// No description provided for @proSettings.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO設定'**
+  String get proSettings;
+
+  /// No description provided for @proModeOn.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO ON'**
+  String get proModeOn;
+
+  /// No description provided for @proModeOff.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO OFF'**
+  String get proModeOff;
+
+  /// No description provided for @proNotMeasuredLabel.
+  ///
+  /// In ja, this message translates to:
+  /// **'トルク・回転数グラフ'**
+  String get proNotMeasuredLabel;
+
+  /// No description provided for @proNotMeasuredSub.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO モードで計測すると表示されます'**
+  String get proNotMeasuredSub;
+
+  /// No description provided for @errorNoVehicle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ガレージから車両を登録してください'**
+  String get errorNoVehicle;
+
+  /// No description provided for @errorSelectGear.
+  ///
+  /// In ja, this message translates to:
+  /// **'計測ギアの選択をしてください'**
+  String get errorSelectGear;
+
+  /// No description provided for @errorSetGearRatio.
+  ///
+  /// In ja, this message translates to:
+  /// **'車両設定からギア比を設定してください'**
+  String get errorSetGearRatio;
+
+  /// No description provided for @errorSetTireSize.
+  ///
+  /// In ja, this message translates to:
+  /// **'車両設定からタイヤサイズを設定してください'**
+  String get errorSetTireSize;
 
   /// No description provided for @shareImage.
   ///

@@ -14,6 +14,7 @@ class GarageViewModel extends ChangeNotifier {
   final PurchaseService _purchaseService;
 
   bool get isPro => _purchaseService.isPro;
+  bool get canAddVehicle => isPro || _vehicles.isEmpty;
   List<Vehicle> _vehicles = [];
   bool _isLoading = false;
   String? _loadError;

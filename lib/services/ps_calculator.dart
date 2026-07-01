@@ -64,4 +64,42 @@ class PsCalculatorService {
     _prevAltitudeM = 0.0;
     _prevTime = null;
   }
+
+  /// PS とエンジン回転数からトルク [kgf·m] を計算する。
+  ///
+  ///   wheel_rpm    = (speedMs / (π × tireOuterDiameterM)) × 60
+  ///   engine_rpm   = wheel_rpm × gearRatio × finalRatio
+  ///   torque [N·m] = P [W] / (engine_rpm × π / 30)
+  ///   torque [kgm] = torque [N·m] / g
+  ///
+  /// 速度ゼロ・ギア比未設定・エンジン回転数ゼロの場合は null を返す。
+  static double? calcTorqueKgm({
+    required double powerPs,
+    required double speedMs,
+    required double gearRatio,
+    required double finalRatio,
+    required double tireOuterDiameterM,
+  }) {
+    if (powerPs <= 0) return 0.0;
+    if (speedMs <= 0 || gearRatio <= 0 || finalRatio <= 0) return null;
+    final wheelRpm = (speedMs / (math.pi * tireOuterDiameterM)) * 60.0;
+    final engineRpm = wheelRpm * gearRatio * finalRatio;
+    if (engineRpm <= 0) return null;
+    final engineRadPerS = engineRpm * math.pi / 30.0;
+    final torqueNm = (powerPs * _wattsPerPs) / engineRadPerS;
+    return torqueNm / _g;
+  }
+
+  /// GPS 速度とギア比からエンジン回転数 [rpm] を計算する。
+  static int? calcEngineRpm({
+    required double speedMs,
+    required double gearRatio,
+    required double finalRatio,
+    required double tireOuterDiameterM,
+  }) {
+    if (speedMs <= 0 || gearRatio <= 0 || finalRatio <= 0) return null;
+    final wheelRpm = (speedMs / (math.pi * tireOuterDiameterM)) * 60.0;
+    final engineRpm = wheelRpm * gearRatio * finalRatio;
+    return engineRpm.round();
+  }
 }

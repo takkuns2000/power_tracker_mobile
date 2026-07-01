@@ -199,6 +199,9 @@ class _BasicInfoModule extends StatelessWidget {
                   placeholder: '1450',
                   controller: vm.weightController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   suffix: Text(l10n.unitKg,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),
@@ -211,6 +214,7 @@ class _BasicInfoModule extends StatelessWidget {
                   placeholder: '1998',
                   controller: vm.displacementController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   suffix: Text(l10n.unitCc,
                       style: AppTextStyles.statsMd(context).copyWith(
                           color: AppColors.secondary.withValues(alpha: 0.6))),
@@ -571,17 +575,9 @@ class _TireSizeModule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.proModeTireSize,
-                  style: AppTextStyles.labelCaps(context).copyWith(
-                      color:
-                          AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
-              const Icon(Icons.tire_repair_outlined,
-                  color: AppColors.secondary, size: 20),
-            ],
-          ),
+          Text(l10n.proModeTireSize,
+              style: AppTextStyles.labelCaps(context).copyWith(
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -639,17 +635,9 @@ class _GearRatiosModule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.proModeGearRatio,
-                  style: AppTextStyles.labelCaps(context).copyWith(
-                      color:
-                          AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
-              const Icon(Icons.settings_input_component_outlined,
-                  color: AppColors.tertiary, size: 20),
-            ],
-          ),
+          Text(l10n.proModeGearRatio,
+              style: AppTextStyles.labelCaps(context).copyWith(
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
           const SizedBox(height: 16),
           Column(
             children: [

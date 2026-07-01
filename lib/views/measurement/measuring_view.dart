@@ -60,7 +60,7 @@ class MeasuringView extends StatelessWidget {
                         Expanded(
                           child: ProLockWrapper(
                             isPro: isPro,
-                            child: _TorqueCard(),
+                            child: _TorqueCard(vm: vm),
                           ),
                         ),
                       ],
@@ -285,9 +285,19 @@ class _HpCard extends StatelessWidget {
 }
 
 class _TorqueCard extends StatelessWidget {
+  const _TorqueCard({required this.vm});
+  final MeasurementViewModel vm;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final torque = vm.currentTorqueKgm;
+    final peak = vm.maxTorqueKgm;
+    final displayTorque = torque != null ? torque.toStringAsFixed(1) : '--';
+    final peakLabel = peak > 0
+        ? 'PEAK ${peak.toStringAsFixed(1)} ${l10n.unitKgm}'
+        : l10n.peakTorqueDefault;
+
     return GlassCard(
       padding: const EdgeInsets.all(20),
       fillHeight: true,
@@ -300,7 +310,7 @@ class _TorqueCard extends StatelessWidget {
               Text(l10n.estimatedTorque,
                   style: AppTextStyles.labelCaps(context)
                       .copyWith(color: AppColors.onSurfaceVariant)),
-              Text(l10n.peakTorqueDefault,
+              Text(peakLabel,
                   style: AppTextStyles.statsMd(context)
                       .copyWith(color: AppColors.primary, fontSize: 14)),
             ],
@@ -313,7 +323,7 @@ class _TorqueCard extends StatelessWidget {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    '--',
+                    displayTorque,
                     style: GoogleFonts.sora(
                       fontSize: 72,
                       fontWeight: FontWeight.w800,

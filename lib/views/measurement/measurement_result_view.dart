@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app_theme.dart';
 import '../../models/measurement.dart';
-import '../../viewmodels/garage_viewmodel.dart';
 import '../../viewmodels/measurement_result_viewmodel.dart';
 import '../../viewmodels/measurement_viewmodel.dart';
 import '../widgets/confirm_dialog.dart';
@@ -33,7 +32,7 @@ class _MeasurementResultBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MeasurementResultViewModel>();
-    final isPro = context.watch<GarageViewModel>().isPro;
+    final isPro = vm.isMeasurementPro;
     final m = vm.measurement;
     final l10n = AppLocalizations.of(context)!;
 
@@ -95,11 +94,28 @@ class _MeasurementResultBody extends StatelessWidget {
             children: [
               _DateHeader(measuredAt: m.measuredAt),
               const SizedBox(height: 8),
-              _PeakHpSection(maxHp: m.maxHp),
+              _PeakHpSection(maxHp: vm.maxHp),
               const SizedBox(height: 24),
-              _ChartCard(hpValues: vm.hpValues, isPro: isPro),
+              _ChartCard(
+                hpValues: vm.graphAxisMode == GraphAxisMode.rpm
+                    ? vm.rpmChartPoints
+                    : vm.hpValues,
+                isPro: isPro,
+              ),
               const SizedBox(height: 16),
-              _ProBento(isPro: isPro),
+              _ProBento(
+                isPro: isPro,
+                maxTorqueKgm: vm.maxTorqueKgm,
+                isRpmMode: vm.graphAxisMode == GraphAxisMode.rpm,
+                canToggleRpmAxis: isPro && vm.canToggleRpmAxis,
+                onToggleAxis: () => context
+                    .read<MeasurementResultViewModel>()
+                    .toggleGraphAxis(),
+                isLossOverrideActive: vm.isLossOverrideActive,
+                onToggleLoss: () => context
+                    .read<MeasurementResultViewModel>()
+                    .toggleLossOverride(),
+              ),
               const SizedBox(height: 16),
               ValueListenableBuilder<bool>(
                 valueListenable: vm.vehicleExpandedNotifier,
@@ -112,13 +128,7 @@ class _MeasurementResultBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _ConditionsCard(
-                measurement: m,
-                isPro: isPro,
-                onResetLoss: () => context
-                    .read<MeasurementResultViewModel>()
-                    .saveDriveLossCoefficient(0.0),
-              ),
+              _ConditionsCard(measurement: m),
               const SizedBox(height: 16),
               _MemoCard(
                 initialMemo: m.memo,
@@ -288,7 +298,24 @@ class _PeakHpSection extends StatelessWidget {
 }
 
 HpPoint _findNearestPoint(
-    double tapX, double chartWidth, List<HpPoint> points) {
+    double tapX, double chartWidth, List<HpPoint> points,
+    {GraphAxisMode axisMode = GraphAxisMode.time}) {
+  if (axisMode == GraphAxisMode.rpm) {
+    final rpmPoints = points.where((p) => p.rpm != null).toList();
+    if (rpmPoints.isNotEmpty) {
+      final minRpm = rpmPoints.map((p) => p.rpm!).reduce((a, b) => a < b ? a : b);
+      final maxRpm = rpmPoints.map((p) => p.rpm!).reduce((a, b) => a > b ? a : b);
+      final range = (maxRpm - minRpm).toDouble();
+      if (range > 0) {
+        return rpmPoints.reduce((a, b) {
+          final ax = chartWidth * (a.rpm! - minRpm) / range;
+          final bx = chartWidth * (b.rpm! - minRpm) / range;
+          return (tapX - ax).abs() < (tapX - bx).abs() ? a : b;
+        });
+      }
+      return rpmPoints.first;
+    }
+  }
   final firstMs = points.first.offsetMs;
   final totalMs = points.last.offsetMs - firstMs;
   return points.reduce((a, b) {
@@ -306,7 +333,10 @@ class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final vm = context.read<MeasurementResultViewModel>();
+    final vm = context.watch<MeasurementResultViewModel>();
+    final axisMode = vm.graphAxisMode;
+    final isRpm = axisMode == GraphAxisMode.rpm;
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,31 +355,44 @@ class _ChartCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(l10n.chartPowerHp,
-                      style: AppTextStyles.labelCaps(context)),
+                  Text(
+                    l10n.chartPowerHp,
+                    style: AppTextStyles.labelCaps(context),
+                  ),
                 ],
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2)),
+              if (isPro)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isRpm
+                        ? AppColors.primary.withValues(alpha: 0.15)
+                        : AppColors.surfaceContainer,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(l10n.pro,
+                          style: AppTextStyles.labelCaps(context).copyWith(
+                            color: AppColors.primary,
+                            fontSize: 10,
+                          )),
+                      const SizedBox(width: 8),
+                      Text(l10n.chartRpmAxis,
+                          style: AppTextStyles.labelCaps(context).copyWith(
+                            color: isRpm
+                                ? AppColors.primary
+                                : AppColors.onSurfaceVariant,
+                            fontSize: 10,
+                          )),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Text(l10n.pro,
-                        style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: AppColors.primary, fontSize: 10)),
-                    const SizedBox(width: 8),
-                    Text(l10n.chartRpmAxis,
-                        style: AppTextStyles.labelCaps(context).copyWith(
-                            color: AppColors.onSurfaceVariant, fontSize: 10)),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -372,18 +415,41 @@ class _ChartCard extends StatelessWidget {
                           final maxHp = hpValues
                               .map((p) => p.ps)
                               .reduce((a, b) => a > b ? a : b);
+
+                          // X 座標の正規化（時間 or RPM）
+                          final rpmPoints = isRpm
+                              ? hpValues.where((h) => h.rpm != null).toList()
+                              : <HpPoint>[];
+                          double xFracForPoint(HpPoint p) {
+                            if (isRpm && p.rpm != null && rpmPoints.length >= 2) {
+                              final minRpm = rpmPoints
+                                  .map((h) => h.rpm!)
+                                  .reduce((a, b) => a < b ? a : b);
+                              final maxRpm = rpmPoints
+                                  .map((h) => h.rpm!)
+                                  .reduce((a, b) => a > b ? a : b);
+                              final range = (maxRpm - minRpm).toDouble();
+                              if (range > 0) {
+                                return (p.rpm! - minRpm) / range;
+                              }
+                            }
+                            return totalMs > 0
+                                ? (p.offsetMs - firstMs) / totalMs
+                                : 0.0;
+                          }
+
                           Positioned? tooltip;
                           if (selectedPoint != null) {
-                            final xFrac = totalMs > 0
-                                ? (selectedPoint.offsetMs - firstMs) / totalMs
-                                : 0.0;
+                            final xFrac = xFracForPoint(selectedPoint);
                             const cardWidth = 88.0;
                             final left =
                                 (constraints.maxWidth * xFrac - cardWidth / 2)
                                     .clamp(0.0, constraints.maxWidth - cardWidth);
                             final pointY = constraints.maxHeight *
                                 (1 - selectedPoint.ps / maxHp);
-                            final cardHeight = isPro ? 72.0 : 52.0;
+                            final hasTorqueRow =
+                                isPro && selectedPoint.torqueKgm != null;
+                            final cardHeight = hasTorqueRow ? 72.0 : 52.0;
                             final showBelow =
                                 pointY < constraints.maxHeight / 2;
                             final top = showBelow
@@ -395,9 +461,11 @@ class _ChartCard extends StatelessWidget {
                               left: left,
                               top: top,
                               child: _ChartTooltipContent(
-                                  point: selectedPoint,
-                                  firstMs: firstMs,
-                                  isPro: isPro),
+                                point: selectedPoint,
+                                firstMs: firstMs,
+                                isPro: isPro,
+                                axisMode: axisMode,
+                              ),
                             );
                           }
                           return GestureDetector(
@@ -406,6 +474,7 @@ class _ChartCard extends StatelessWidget {
                                 details.localPosition.dx,
                                 constraints.maxWidth,
                                 hpValues,
+                                axisMode: axisMode,
                               );
                               vm.selectChartPoint(point);
                             },
@@ -416,10 +485,12 @@ class _ChartCard extends StatelessWidget {
                                   painter: _HpChartPainter(
                                     hpValues: hpValues,
                                     selectedPoint: selectedPoint,
+                                    isPro: isPro,
+                                    axisMode: axisMode,
                                   ),
                                   child: const SizedBox.expand(),
                                 ),
-                                if (tooltip != null) tooltip,
+                                ?tooltip,
                               ],
                             ),
                           );
@@ -429,8 +500,10 @@ class _ChartCard extends StatelessWidget {
                   ),
           ),
           const SizedBox(height: 8),
-          Text(l10n.chartTimeElapsed,
-              style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10)),
+          Text(
+            isRpm ? l10n.chartRpmX1000 : l10n.chartTimeElapsed,
+            style: AppTextStyles.labelCaps(context).copyWith(fontSize: 10),
+          ),
         ],
       ),
     );
@@ -442,14 +515,20 @@ class _ChartTooltipContent extends StatelessWidget {
     required this.point,
     required this.firstMs,
     required this.isPro,
+    this.axisMode = GraphAxisMode.time,
   });
   final HpPoint point;
   final int firstMs;
   final bool isPro;
+  final GraphAxisMode axisMode;
 
   @override
   Widget build(BuildContext context) {
     final elapsedSec = (point.offsetMs - firstMs) / 1000.0;
+    final xLabel = axisMode == GraphAxisMode.rpm && point.rpm != null
+        ? '${point.rpm!} RPM'
+        : '${elapsedSec.toStringAsFixed(1)} 秒';
+
     return Container(
       width: 88,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -470,17 +549,16 @@ class _ChartTooltipContent extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          if (isPro) ...[
+          if (isPro && point.torqueKgm != null) ...[
             const SizedBox(height: 2),
-            // TODO: トルク計算実装後に実値を表示する（現在は未実装のため '--' 表示）
-            const Text(
-              '-- Nm',
-              style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 11),
+            Text(
+              '${point.torqueKgm!.toStringAsFixed(1)} kgm',
+              style: const TextStyle(color: AppColors.secondary, fontSize: 11),
             ),
           ],
           const SizedBox(height: 2),
           Text(
-            '${elapsedSec.toStringAsFixed(1)} 秒',
+            xLabel,
             style: const TextStyle(
                 color: AppColors.onSurfaceVariant, fontSize: 11),
           ),
@@ -491,9 +569,28 @@ class _ChartTooltipContent extends StatelessWidget {
 }
 
 class _HpChartPainter extends CustomPainter {
-  const _HpChartPainter({required this.hpValues, this.selectedPoint});
+  const _HpChartPainter({
+    required this.hpValues,
+    this.selectedPoint,
+    this.isPro = false,
+    this.axisMode = GraphAxisMode.time,
+  });
   final List<HpPoint> hpValues;
   final HpPoint? selectedPoint;
+  final bool isPro;
+  final GraphAxisMode axisMode;
+
+  static const _torqueColor = Color(0xFFFFB347);
+
+  // X 座標正規化（時間 or RPM）
+  double _xFrac(HpPoint p, int firstMs, double totalMs,
+      int minRpm, int maxRpm) {
+    if (axisMode == GraphAxisMode.rpm && p.rpm != null) {
+      final range = (maxRpm - minRpm).toDouble();
+      if (range > 0) return (p.rpm! - minRpm) / range;
+    }
+    return totalMs > 0 ? (p.offsetMs - firstMs) / totalMs : 0.0;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -505,7 +602,7 @@ class _HpChartPainter extends CustomPainter {
     for (final y in [
       size.height * 0.17,
       size.height * 0.5,
-      size.height * 0.83
+      size.height * 0.83,
     ]) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
@@ -515,8 +612,54 @@ class _HpChartPainter extends CustomPainter {
 
     final firstMs = hpValues.first.offsetMs;
     final totalMs = (hpValues.last.offsetMs - firstMs).toDouble();
-    if (totalMs <= 0) return;
 
+    // RPM 軸のレンジ計算
+    final rpmPoints = hpValues.where((p) => p.rpm != null).toList();
+    final minRpm = rpmPoints.isNotEmpty
+        ? rpmPoints.map((p) => p.rpm!).reduce((a, b) => a < b ? a : b)
+        : 0;
+    final maxRpm = rpmPoints.isNotEmpty
+        ? rpmPoints.map((p) => p.rpm!).reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    // 描画対象点（RPM モードは rpm != null のみ）
+    final drawPoints = axisMode == GraphAxisMode.rpm
+        ? rpmPoints
+        : hpValues;
+    if (drawPoints.length < 2) return;
+
+    // トルク曲線（PRO、データあり）
+    if (isPro) {
+      final torquePoints = drawPoints.where((p) => p.torqueKgm != null).toList();
+      if (torquePoints.length >= 2) {
+        final maxTorque = torquePoints
+            .map((p) => p.torqueKgm!)
+            .reduce((a, b) => a > b ? a : b);
+        if (maxTorque > 0) {
+          final torquePaint = Paint()
+            ..color = _torqueColor.withValues(alpha: 0.7)
+            ..strokeWidth = 2
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke;
+          final torquePath = Path();
+          var first = true;
+          for (final p in torquePoints) {
+            final x = size.width *
+                _xFrac(p, firstMs, totalMs, minRpm, maxRpm);
+            final y = size.height * (1 - 0.5 * p.torqueKgm! / maxTorque);
+            if (first) {
+              torquePath.moveTo(x, y);
+              first = false;
+            } else {
+              torquePath.lineTo(x, y);
+            }
+          }
+          canvas.drawPath(torquePath, torquePaint);
+        }
+      }
+    }
+
+    // 馬力曲線
     final hpPaint = Paint()
       ..color = AppColors.primary
       ..strokeWidth = 3
@@ -524,9 +667,10 @@ class _HpChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    for (var i = 0; i < hpValues.length; i++) {
-      final x = size.width * (hpValues[i].offsetMs - firstMs) / totalMs;
-      final y = size.height * (1 - hpValues[i].ps / maxHp);
+    for (var i = 0; i < drawPoints.length; i++) {
+      final x = size.width *
+          _xFrac(drawPoints[i], firstMs, totalMs, minRpm, maxRpm);
+      final y = size.height * (1 - drawPoints[i].ps / maxHp);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -535,15 +679,17 @@ class _HpChartPainter extends CustomPainter {
     }
     canvas.drawPath(path, hpPaint);
 
-    final peakIndex = hpValues.indexWhere((p) => p.ps == maxHp);
-    final peakX =
-        size.width * (hpValues[peakIndex].offsetMs - firstMs) / totalMs;
-    canvas.drawCircle(
-        Offset(peakX, 0), 5, Paint()..color = AppColors.primary);
+    final peakIndex = drawPoints.indexWhere((p) => p.ps == maxHp);
+    if (peakIndex >= 0) {
+      final peakX = size.width *
+          _xFrac(drawPoints[peakIndex], firstMs, totalMs, minRpm, maxRpm);
+      canvas.drawCircle(
+          Offset(peakX, 0), 5, Paint()..color = AppColors.primary);
+    }
 
     if (selectedPoint != null) {
-      final selX =
-          size.width * (selectedPoint!.offsetMs - firstMs) / totalMs;
+      final selX = size.width *
+          _xFrac(selectedPoint!, firstMs, totalMs, minRpm, maxRpm);
       canvas.drawLine(
         Offset(selX, 0),
         Offset(selX, size.height),
@@ -556,23 +702,41 @@ class _HpChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_HpChartPainter old) =>
-      hpValues != old.hpValues || selectedPoint != old.selectedPoint;
+      hpValues != old.hpValues ||
+      selectedPoint != old.selectedPoint ||
+      isPro != old.isPro ||
+      axisMode != old.axisMode;
 }
 
 class _ProBento extends StatelessWidget {
-  const _ProBento({required this.isPro});
+  const _ProBento({
+    required this.isPro,
+    required this.maxTorqueKgm,
+    required this.isRpmMode,
+    required this.canToggleRpmAxis,
+    required this.onToggleAxis,
+    required this.isLossOverrideActive,
+    required this.onToggleLoss,
+  });
   final bool isPro;
+  final double? maxTorqueKgm;
+  final bool isRpmMode;
+  final bool canToggleRpmAxis;
+  final VoidCallback onToggleAxis;
+  final bool isLossOverrideActive;
+  final VoidCallback onToggleLoss;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 110),
-            child: ProLockWrapper(
-              isPro: isPro,
+    return ProLockWrapper(
+      isPro: isPro,
+      mode: ProLockMode.notMeasured,
+      child: Row(
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 110),
               child: GlassCard(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -586,7 +750,9 @@ class _ProBento extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: '--',
+                            text: maxTorqueKgm != null
+                                ? maxTorqueKgm!.toStringAsFixed(1)
+                                : '--',
                             style: GoogleFonts.sora(
                               fontSize: 28,
                               fontWeight: FontWeight.w700,
@@ -594,7 +760,7 @@ class _ProBento extends StatelessWidget {
                             ),
                           ),
                           TextSpan(
-                            text: ' NM',
+                            text: ' kgm',
                             style: AppTextStyles.labelCaps(context)
                                 .copyWith(color: AppColors.secondary),
                           ),
@@ -606,31 +772,40 @@ class _ProBento extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 110),
-            child: ProLockWrapper(
-              isPro: isPro,
-              child: GlassCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.analytics_outlined,
-                        color: AppColors.primary, size: 28),
-                    const SizedBox(height: 4),
-                    Text(l10n.showDetailLog,
-                        style: AppTextStyles.labelCaps(context)
-                            .copyWith(color: AppColors.primary, fontSize: 10)),
-                  ],
-                ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.proSettings,
+                    style: AppTextStyles.labelCaps(context).copyWith(
+                      color: AppColors.primary,
+                      fontSize: 9,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _LossToggleChip(
+                    label: l10n.chartRpmAxis,
+                    active: isRpmMode,
+                    onTap: onToggleAxis,
+                    disabled: !canToggleRpmAxis,
+                  ),
+                  const SizedBox(height: 8),
+                  _LossToggleChip(
+                    label: l10n.lossCoeffOverride,
+                    active: isLossOverrideActive,
+                    onTap: onToggleLoss,
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -764,14 +939,8 @@ class _VehicleDetail extends StatelessWidget {
 }
 
 class _ConditionsCard extends StatelessWidget {
-  const _ConditionsCard({
-    required this.measurement,
-    required this.isPro,
-    required this.onResetLoss,
-  });
+  const _ConditionsCard({required this.measurement});
   final Measurement measurement;
-  final bool isPro;
-  final VoidCallback onResetLoss;
 
   @override
   Widget build(BuildContext context) {
@@ -824,29 +993,60 @@ class _ConditionsCard extends StatelessWidget {
               ),
             ],
           ),
-          if (isPro) ...[
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: onResetLoss,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainer,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(l10n.resetLossCoefficient,
-                      style: AppTextStyles.labelCaps(context)
-                          .copyWith(color: AppColors.primary, fontSize: 10)),
-                ),
-              ),
-            ),
-          ],
         ],
+      ),
+    );
+  }
+}
+
+class _LossToggleChip extends StatelessWidget {
+  const _LossToggleChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+    this.disabled = false,
+  });
+  final String label;
+  final bool active;
+  final VoidCallback? onTap;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bgColor;
+    final Color borderColor;
+    final Color textColor;
+    if (disabled) {
+      bgColor = Colors.transparent;
+      borderColor = AppColors.outline.withValues(alpha: 0.25);
+      textColor = AppColors.onSurfaceVariant.withValues(alpha: 0.4);
+    } else if (active) {
+      bgColor = AppColors.primary.withValues(alpha: 0.15);
+      borderColor = AppColors.primary;
+      textColor = AppColors.primary;
+    } else {
+      bgColor = AppColors.surfaceContainer;
+      borderColor = AppColors.primary.withValues(alpha: 0.3);
+      textColor = AppColors.onSurfaceVariant;
+    }
+
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: borderColor),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelCaps(context).copyWith(
+            color: textColor,
+            fontSize: 10,
+          ),
+        ),
       ),
     );
   }
