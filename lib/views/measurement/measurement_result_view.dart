@@ -730,13 +730,14 @@ class _ProBento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 110),
-            child: ProLockWrapper(
-              isPro: isPro,
+    return ProLockWrapper(
+      isPro: isPro,
+      mode: ProLockMode.notMeasured,
+      child: Row(
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 110),
               child: GlassCard(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -772,11 +773,8 @@ class _ProBento extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ProLockWrapper(
-            isPro: isPro,
+          const SizedBox(width: 16),
+          Expanded(
             child: GlassCard(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
@@ -807,8 +805,8 @@ class _ProBento extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -575,17 +575,9 @@ class _TireSizeModule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.proModeTireSize,
-                  style: AppTextStyles.labelCaps(context).copyWith(
-                      color:
-                          AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
-              const Icon(Icons.tire_repair_outlined,
-                  color: AppColors.secondary, size: 20),
-            ],
-          ),
+          Text(l10n.proModeTireSize,
+              style: AppTextStyles.labelCaps(context).copyWith(
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -643,17 +635,9 @@ class _GearRatiosModule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l10n.proModeGearRatio,
-                  style: AppTextStyles.labelCaps(context).copyWith(
-                      color:
-                          AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
-              const Icon(Icons.settings_input_component_outlined,
-                  color: AppColors.tertiary, size: 20),
-            ],
-          ),
+          Text(l10n.proModeGearRatio,
+              style: AppTextStyles.labelCaps(context).copyWith(
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.7))),
           const SizedBox(height: 16),
           Column(
             children: [

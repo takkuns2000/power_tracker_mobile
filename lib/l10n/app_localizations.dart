@@ -169,7 +169,7 @@ abstract class AppLocalizations {
   /// No description provided for @navVehicles.
   ///
   /// In ja, this message translates to:
-  /// **'VEHICLES'**
+  /// **'GARAGE'**
   String get navVehicles;
 
   /// No description provided for @garage.
@@ -241,7 +241,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeToUnlock.
   ///
   /// In ja, this message translates to:
-  /// **'アップグレードして解放'**
+  /// **'アップグレードしてPROモードを解放'**
   String get upgradeToUnlock;
 
   /// No description provided for @labelVehicleNickname.
@@ -699,6 +699,24 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'PRO OFF'**
   String get proModeOff;
+
+  /// No description provided for @proNotMeasuredLabel.
+  ///
+  /// In ja, this message translates to:
+  /// **'トルク・回転数グラフ'**
+  String get proNotMeasuredLabel;
+
+  /// No description provided for @proNotMeasuredSub.
+  ///
+  /// In ja, this message translates to:
+  /// **'PRO モードで計測すると表示されます'**
+  String get proNotMeasuredSub;
+
+  /// No description provided for @errorNoVehicle.
+  ///
+  /// In ja, this message translates to:
+  /// **'ガレージから車両を登録してください'**
+  String get errorNoVehicle;
 
   /// No description provided for @errorSelectGear.
   ///

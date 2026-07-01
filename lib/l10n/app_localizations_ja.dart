@@ -45,7 +45,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navHistory => 'HISTORY';
 
   @override
-  String get navVehicles => 'VEHICLES';
+  String get navVehicles => 'GARAGE';
 
   @override
   String get garage => 'ガレージ';
@@ -81,7 +81,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get proModeLimited => 'Pro Mode 限定';
 
   @override
-  String get upgradeToUnlock => 'アップグレードして解放';
+  String get upgradeToUnlock => 'アップグレードしてPROモードを解放';
 
   @override
   String get labelVehicleNickname => '車両ニックネーム';
@@ -310,6 +310,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get proModeOff => 'PRO OFF';
+
+  @override
+  String get proNotMeasuredLabel => 'トルク・回転数グラフ';
+
+  @override
+  String get proNotMeasuredSub => 'PRO モードで計測すると表示されます';
+
+  @override
+  String get errorNoVehicle => 'ガレージから車両を登録してください';
 
   @override
   String get errorSelectGear => '計測ギアの選択をしてください';

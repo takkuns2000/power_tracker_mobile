@@ -22,7 +22,9 @@ class MeasurementPreparationView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     String? validationError;
-    if (proModeActive && vm.selectedVehicleId != null) {
+    if (garageVm.vehicles.isEmpty) {
+      validationError = l10n.errorNoVehicle;
+    } else if (proModeActive && vm.selectedVehicleId != null) {
       final vehicle = vm.selectedVehicle;
       final hasGearRatios = vehicle?.gearRatios.isNotEmpty == true;
       final hasTireSize = vehicle?.tireSize != null;
