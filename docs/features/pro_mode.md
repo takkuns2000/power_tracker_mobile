@@ -112,15 +112,6 @@ bool get isMeasurementPro => _measurement.usedGearRatio != null;
 - 表示テキスト：「トルク・回転数グラフ / PRO モードで計測すると表示されます」
 - `ProLockMode.upgrade`（計測中画面・未契約ユーザー向け）とは別メッセージ
 
-### 計測準備画面のバリデーション優先度
-
-PRO モード有効時のエラー表示優先順位：
-
-1. 車両未登録 → 「ガレージから車両を登録してください」
-2. ギア比未設定 → 「車両設定からギア比を設定してください」
-3. タイヤサイズ未設定 → 「車両設定からタイヤサイズを設定してください」
-4. ギア未選択 → 「計測ギアの選択をしてください」
-
 ### 複数台登録制限
 
 - `GarageViewModel.canAddVehicle` = `isPro || vehicles.isEmpty`
